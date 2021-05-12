@@ -21,11 +21,13 @@ const FeedList = () => {
 
   // Methods ----------------------------------------------------------------------
   const addFeed = React.useCallback((data, date, sourceUser) => {
-      const id = Gun.node.soul(data);
-      if(feedIndex[id]) // Do tweet already exit in feed?
+      const soul = Gun.node.soul(data);
+      const id = soul.split('/').pop();
+      if(feedIndex[soul]) // Do tweet already exit in feed?
           return false; // No need re-update
 
       const item = {
+          soul: soul,
           id: id,
           tweet: data,
           user: sourceUser,
@@ -33,7 +35,7 @@ const FeedList = () => {
       }
 
       feed.unshift(item); // Make sure not to add the same object more than once to the list.
-      feedIndex[id] = item; // Use index, so the data only gets added to the feed once.
+      feedIndex[soul] = item; // Use index, so the data only gets added to the feed once.
       setFeedUpdated(id);
       return true;
 
@@ -56,7 +58,7 @@ const FeedList = () => {
   }, [addFeed]);
 
   
-  // Build up users collection
+  // Build up users collection, needs refactoring, as it gets called multiple times.
   useEffect(() => {
     if(!isLoggedIn || !userContainer) return;
 
@@ -85,7 +87,7 @@ const FeedList = () => {
   return (
     <Wrapper>
       {feed.length ? (
-          feed.map((item) => <Tweet key={item.id} item={item} />)
+          feed.map((item) => <Tweet key={item.soul} item={item} />)
       ) : (
         <CustomResponse text="Follow some people to get some feed updates" />
       )}

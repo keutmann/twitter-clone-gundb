@@ -30,12 +30,12 @@ const AppRouter = () => {
           <Route exact path="/notifications" component={Notifications} />
           <Route exact path="/bookmarks" component={Bookmarks} />
           <Route exact path="/settings" component={Settings} />
+          <Route exact path={`/settings/profile`} component={EditProfile} />
           <Route
             exact
             path={`/:handle/status/:tweetId`}
             component={MasterTweet}
           />
-          <Route exact path={`/settings/profile`} component={EditProfile} />
           <Route exact path={`/:handle`} component={Profile} />
           <Redirect from="*" to="/" />
         </Switch>
