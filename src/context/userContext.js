@@ -5,7 +5,6 @@ import { GunContext } from './gunContext';
 import resources from '../utils/resources';
 //import { DateTree } from 'gun-util';
 import 'gun/lib/then';
-import moment from 'moment'
 
 
 
@@ -76,43 +75,6 @@ const UserProvider = (props) => {
         },
         [isLoggedIn, signup, setSignedUp]
     );
-
-    // Create a tweet on Gun
-    const createTweet = React.useCallback(async (tweet) => {
-        if(!isLoggedIn) return;
-
-        // Timestamp the tweet automatically
-        
-        //tweet._id = "test";
-
-        //const tweetHash = await objectHashSha256(tweet);
-        //const tweetId = await sha256(user.gunUser.is.epub + tweetHash); // Base64 encoded
-    
-        //console.log(`Tweet ID: ${tweet._id}`);
-        
-        //let data = Object.assign(tweet, resources.node.envelope); // Merge all properties from envelope to a tweet
-        //data._id = tweetId;
-        //data._sig = await sea.sign(tweetId, userKeys);
-        const tweetId = moment().toISOString();
-        tweet.createdAt = tweetId;
-        //tweet.createdAt = tweetId; // Converts a date to a string following the ISO 8601 Extended Format.//const tweetId = new Date().toISOString();
-        // console.log('Tweet ID : '+tweetId);
-
-        const dataNode = user.tweetsNode.get(tweetId);
-        const data = await dataNode.put(tweet);
-        const previousTweet = await user.tweetsNode.get(resources.node.names.latest).once().then();
-        if(previousTweet)
-            dataNode.get('next').put(previousTweet);
-            //data['next'] = previousTweet;
-
-        user.tweetsNode.get('latest').put(data);
-
-        // // Add comments object from the Gun root, as this is writeable for everone.
-        // let commentsNode = gun.get(resources.node.names.dpeep).get(resources.node.names.comments).get(tweetId).put({});
-        // let commentsData = await commentsNode.once().then();
-        // tweetNode.get(resources.node.names.comments).put(commentsData);
-    
-    }, [isLoggedIn, user]);
 
     const followUser = React.useCallback(async (pubId) => {
         if(!isLoggedIn || user === null) return;
@@ -189,10 +151,10 @@ const UserProvider = (props) => {
 
     const value = React.useMemo(
         () => ({ 
-            user, users, gun, isLoggedIn, feed, feedIndex, userSignUp, loginPassword, logoutUser, setProfile, getUserContainerById, loadProfile, createTweet, followUser
+            user, users, gun, isLoggedIn, feed, feedIndex, userSignUp, loginPassword, logoutUser, setProfile, getUserContainerById, loadProfile, followUser
         }),
         [
-            user, users, gun, isLoggedIn, feed, feedIndex, userSignUp, loginPassword, logoutUser, setProfile, getUserContainerById, loadProfile, createTweet, followUser
+            user, users, gun, isLoggedIn, feed, feedIndex, userSignUp, loginPassword, logoutUser, setProfile, getUserContainerById, loadProfile, followUser
         ]
       );
     

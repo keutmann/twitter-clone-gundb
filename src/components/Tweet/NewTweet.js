@@ -11,6 +11,9 @@ import AvatarIdenticon from "../AvatarIdenticon";
 import { uploadImage } from "../../utils";
 import Loader from "../Loader";
 import useUser  from '../../hooks/useUser';
+import moment from 'moment'
+import resources from '../../utils/resources';
+
 
 const Wrapper = styled.div`
   display: flex;
@@ -50,29 +53,33 @@ const Wrapper = styled.div`
   }
 `;
 
-// const Avatar = styled(Identicon)`
-//   height: ${(props) => (props.lg ? "130px" : "40px")};
-//   width: ${(props) => (props.lg ? "130px" : "40px")};
-//   object-fit: cover;
-//   border-radius: 50%;
-//   margin-right: 1rem;
-//   margin-bottom: 1rem;
-
-//   @media screen and (max-width: 530px) {
-//     height: ${(props) => (props.lg ? "110px" : "40px")};
-//     width: ${(props) => (props.lg ? "110px" : "40px")};
-//   }
-// `;
-
-
 const NewTweet = () => {
   const [tweetFiles, setTweetFiles] = useState([]);
   const tweet = useInput("");
 
-  const { user, createTweet } = useUser();
+  const { user, gun } = useUser();
 
+  // Create a tweet on Gun
+  const createTweet = async (tweet) => {
+    // Timestamp the tweet automatically, this will enable time search on the users Tweets node.
+    const tweetId = moment().toISOString();
+    tweet.createdAt = tweetId;
 
-  if (!user) return <Loader />;
+    const tweetNode = user.tweetsNode.get(tweetId);
+    const tweetData = await tweetNode.put(tweet);
+
+    // Chain up tweets
+    const previousTweetData = await user.tweetsNode.get(resources.node.names.latest).once().then();
+    if(previousTweetData)
+        tweetNode.get('next').put(previousTweetData);
+
+    user.tweetsNode.get('latest').put(tweetData);
+
+    // Add comments object from the Gun root, as this is writeable for everone.
+    const commentsID = user.id+tweetId;
+    const commentsData = await gun.get(resources.node.names.dpeep).get(resources.node.names.comments).get(commentsID).put({}).once().then();
+    tweetNode.get(resources.node.names.comments).put(commentsData);
+  }
 
   const handleNewTweet = async (e) => {
     e.preventDefault();
@@ -83,7 +90,8 @@ const NewTweet = () => {
 
     try {
       let tweetdata = { "text" : tweet.value, "tags": tags };
-      createTweet(tweetdata);
+      
+      await createTweet(tweetdata);
 
       //toast.success("Your tweet has been posted");
     } catch (err) {
@@ -99,7 +107,7 @@ const NewTweet = () => {
     setTweetFiles([...tweetFiles, imageUrl]);
   };
 
-
+  if (!user) return <Loader />;
 
   return (
     <Wrapper>
