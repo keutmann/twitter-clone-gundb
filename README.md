@@ -1,4 +1,13 @@
-# Twitter Clone Frontend
+# Twitter Clone Based on Gun DB
+
+Twitter Clone based on the Gun DB as backend storage and network distribution.
+The intention is to demo a Trust-based discussion forum.
+
+The original backend for this Clone is not used.
+
+--------------------------------------------
+
+# Twitter Clone Frontend (From original project)
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/c9d04c4d-788b-45f1-9477-7cdc22982721/deploy-status)](https://app.netlify.com/sites/twitterclone22/deploys)
 
