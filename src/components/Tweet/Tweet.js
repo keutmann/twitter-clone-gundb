@@ -110,9 +110,6 @@ const Tweet = ({ item }) => {
   const userid = item.user.id;
   const handle = (profile && profile.handle) || `${userid.substring(0,4)}...${userid.substring(userid.length - 4, userid.length)}`;
   const displayname =(profile &&  profile.displayname) || "Anonymous";
-  // const strList = text.split(" ");
-  // const processedText = strList.filter((str) => !str.startsWith("#")).join(" ");
-  // // const handle = user && user.handle;
 
   return (
     <Wrapper>

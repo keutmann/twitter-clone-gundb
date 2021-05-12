@@ -1,9 +1,12 @@
-import React from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
 import moment from "moment";
 import Avatar from "../../styles/Avatar";
 import DeleteComment from "./DeleteComment";
+import useUser  from '../../hooks/useUser';
+//import Gun from 'gun';
+//import resources from "../../utils/resources";
 
 const Wrapper = styled.div`
   display: flex;
@@ -54,8 +57,18 @@ const Wrapper = styled.div`
   }
 `;
 
-const Comment = ({ comment }) => {
-  const { id, text, isCommentMine, user, createdAt } = comment;
+const Comment = ({ item }) => {
+  const { id, text, isCommentMine, user, createdAt } = item;
+  const { getUserContainerById } = useUser();
+
+  //const [comment, setComment ] = useState();
+
+  useEffect(() => {
+    item.user = getUserContainerById(item.userId);
+
+
+    //setComment(item);
+  },[item, getUserContainerById]);
 
   const handle = user && user.handle;
 

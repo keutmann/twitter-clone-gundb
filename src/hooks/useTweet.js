@@ -1,5 +1,4 @@
 // import React, { useEffect, useState } from 'react';
-// import { GunContext, } from '../context/gunContext';
 // import resources from '../utils/resources';
 // import sea from 'gun/sea';
 // import { useUserNode } from './useUserNode';
@@ -11,8 +10,6 @@
 
 // const useTweet = () => {
 
-
-//     const { user: gunUser, isLoggedIn, userKeys, gun } = React.useContext(GunContext);
 
 //     const { node: tweetsNode } = useUserNode(null, resources.node.names.tweets, gun, isLoggedIn);
 //     const { node: followingNode } = useUserNode(null, resources.node.names.following, gun, isLoggedIn);

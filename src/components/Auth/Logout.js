@@ -8,10 +8,10 @@ import useUser from '../../hooks/useUser';
 
 const Logout = () => {
 	const { theme } = useContext(ThemeContext);
-	const { logoutUser } = useUser();
-
+	const { logout } = useUser();
+	
 	const handleLogout = () => {
-		logoutUser();
+		logout();
 		toast.success("You are logged out");
 	};
 

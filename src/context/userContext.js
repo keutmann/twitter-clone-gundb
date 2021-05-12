@@ -1,11 +1,18 @@
 import React, { useEffect, useState, createContext } from 'react';
-import { GunContext } from './gunContext';
-//import sea from 'gun/sea';
-//import { useUserNode } from '../hooks/useUserNode'
 import resources from '../utils/resources';
-//import { DateTree } from 'gun-util';
+import Gun from 'gun/gun';
+import sea from 'gun/sea';
+import 'gun/lib/radix';
+import 'gun/lib/radisk';
+import 'gun/lib/store';
+import 'gun/lib/rindexed';
 import 'gun/lib/then';
 
+import { sha256 } from '../utils/crypto';
+
+
+
+const dpeepUserKeys = 'dpeepUserKeys';
 
 
 const UserContext = createContext(null);
@@ -13,22 +20,92 @@ UserContext.displayName = 'userContext';
 
 
 const UserProvider = (props) => {
-    const { user: gunUser, isLoggedIn, signup, gun, logout: gunLogout, loginPassword } = React.useContext(GunContext);
-    //const { fields: profile, put: setProfile } = useGunState(user.get(dpeepRootName).get(profileName), { appKeys: null, sea });
 
-    //const { data: profile, put: setProfile, node: profileNode } = useUserNode(null, resources.node.names.profile, gun, isLoggedIn); //node: profileNode
-    const [signedUp, setSignedUp ] = useState(false);
+    const [gun] = useState(Gun()); // { peers: serverpeers }
+    const [gunUser, setGunUser] = useState(null);
+    const [isLoggedIn, setIsLoggedIn] = useState(null);
 
-    //const { node: tweetsNode } = useUserNode(null, resources.node.names.tweets, gun, isLoggedIn);
-    //const { node: followNode } = useUserNode(null, resources.node.names.follow, gun, isLoggedIn);
-
-    const [ user, setUser ] = useState(null);
-    const [ users ] = useState({});
+    const [signedUp, setSignedUp] = useState(false);
+    const [user, setUser] = useState(null);
+    const [users] = useState({});
 
     // The feed is global, so its available for build up in the background
-    const [ feed, setFeed ] = useState([]);
-    const [ feedIndex, setFeedIndex ] = useState({});
-  
+    const [feed, setFeed] = useState([]);
+    const [feedIndex, setFeedIndex] = useState({});
+
+
+    const login = React.useCallback(
+        async (keys) => {
+            gun.user().auth(keys);
+            sessionStorage.setItem(dpeepUserKeys, JSON.stringify(keys));
+
+            return { success: true, msg: 'Is authenticating', keyPair: keys };
+        },
+        [gun]
+    );
+
+    const loginPassword = React.useCallback(
+        async (username, password) => {
+
+            const passwordString = username + password;
+            const keyHash = await sha256(passwordString);
+            const encryptedstring = localStorage.getItem(keyHash);
+
+            if (!encryptedstring)
+                return { success: false, msg: 'Unknown user or missing key pair. Try signup.' };
+
+            const keyPair = await sea.decrypt(encryptedstring, passwordString);
+            if (!keyPair)
+                return { success: false, msg: 'Decryption of key pair failed' };
+
+            return await login(keyPair);
+        },
+        [login]
+    );
+
+    const signup = React.useCallback(
+        async (username, password) => {
+
+            // Check first if the user already exist, and then auto login 
+            const ack = await loginPassword(username, password);
+            if (ack.sucess) // Login success, now return keypair 
+                return ack;
+
+            // There is no user, therefore create a new keyPair
+            const passwordString = username + password;
+            const keyHash = await sha256(passwordString);
+            const keyPair = await sea.pair();
+            const encryptedString = await sea.encrypt(JSON.stringify(keyPair), passwordString);
+            localStorage.setItem(keyHash, encryptedString);
+
+            return login(keyPair);
+        },
+        [login, loginPassword]
+    );
+
+    const logout = React.useCallback(() => {
+        gunUser.leave();
+
+        sessionStorage.setItem(dpeepUserKeys, '');
+        setGunUser(null);
+        setIsLoggedIn(false);
+        setUser(null);
+        setFeed([]);
+        setFeedIndex({});
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [gunUser]);
+
+    gun.on('auth', async () => {
+        setIsLoggedIn(true);
+        const user = gun.user();
+        setGunUser(user);
+
+        const dpeepUser = getUserContainer(user); // Load currently loggin user
+        // Load the profile on to dpeepUser
+        await loadProfile(dpeepUser);
+        setUser(dpeepUser);
+    });
+
 
     const getUserContainer = React.useCallback(
         (user) => {
@@ -38,14 +115,14 @@ const UserProvider = (props) => {
             const profileNode = dpeepNode.get(resources.node.names.profile);
             const tweetsNode = dpeepNode.get(resources.node.names.tweets);
             const followsNode = dpeepNode.get(resources.node.names.follow);
-            
+
             //const tree = new DateTree(tweetsNode, 'millisecond'); // Do not work properly, events do not get fired and data not stored.
             //const tree = tweetsNode;
 
-            const container = { id: pubId, gunUser: user, tweetsNode:  tweetsNode, profileNode: profileNode, followsNode: followsNode};
+            const container = { id: pubId, gunUser: user, tweetsNode: tweetsNode, profileNode: profileNode, followsNode: followsNode };
             users[pubId] = Object.assign(users[pubId] || {}, container);
 
-            return container;
+            return users[pubId];
         },
         [users]
     );
@@ -53,9 +130,9 @@ const UserProvider = (props) => {
     const getUserContainerById = React.useCallback(
         (pubId) => {
             const container = users[pubId]; // Just return an exiting container is exist
-            if(container) return container;
+            if (container) return container;
 
-            const user = gun.user(pubId); 
+            const user = gun.user(pubId);
 
             return getUserContainer(user); // Create a new one
         },
@@ -64,7 +141,7 @@ const UserProvider = (props) => {
 
     const userSignUp = React.useCallback(
         async (signedUpData) => {
-            if(isLoggedIn)
+            if (isLoggedIn)
                 return;
 
             signup(signedUpData.handle, signedUpData.password);
@@ -77,15 +154,15 @@ const UserProvider = (props) => {
     );
 
     const followUser = React.useCallback(async (pubId) => {
-        if(!isLoggedIn || user === null) return;
-      
+        if (!isLoggedIn || user === null) return;
+
         user.followNode.get(pubId).put(gun.user(pubId));
-    
+
     }, [isLoggedIn, user, gun]);
 
     const setProfile = React.useCallback(
         async (profileData) => {
-            if(!isLoggedIn) return;
+            if (!isLoggedIn) return;
 
             user.profileNode.put(profileData);
         },
@@ -95,12 +172,12 @@ const UserProvider = (props) => {
     const loadProfile = React.useCallback(
         async (userNode) => {
 
-            if(!userNode.profile) {
+            if (!userNode.profile) {
                 const preProfile = {
-                    handle :`${userNode.id.substring(0,4)}...${userNode.id.substring(userNode.id.length - 4, userNode.id.length)}`,
-                    username : 'Anonymous'
+                    handle: `${userNode.id.substring(0, 4)}...${userNode.id.substring(userNode.id.length - 4, userNode.id.length)}`,
+                    username: 'Anonymous'
                 };
-                
+
                 const loadedProfile = await userNode.profileNode.once().then();
 
                 userNode.profile = Object.assign(resources.node.profile, preProfile, loadedProfile);
@@ -109,55 +186,49 @@ const UserProvider = (props) => {
         },
         []
     );
-    
-    const logoutUser = React.useCallback(() => {
-        console.log('logout');
-        gunLogout();
-        setUser(null);
-        setFeed([]);
-        setFeedIndex({});
-      }, [setUser, gunLogout]);
-    
+
+
 
     // UseEffects --------------------------------------------------------------------------------------------
 
     // Signup effect, register at the userIndex that we exist.
     useEffect(() => {
-        if(!signedUp || !isLoggedIn || !user) return;
+        if (!signedUp || !isLoggedIn || !user) return;
 
         gun.get(resources.node.names.dpeep).get(resources.node.names.userIndex).get(user.id).put(user.gunUser);
 
-      }, [signedUp, isLoggedIn, user, gun]);
-    
-    
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [signedUp, isLoggedIn]);
+
+
     // Load profile of   
-    useEffect(() => {
-            if(!isLoggedIn) {
-                return;
-            } 
+    // useEffect(() => {
+    //         if(!isLoggedIn) {
+    //             return;
+    //         } 
 
-            if(!gunUser) return;
+    //         if(!gunUser) return;
 
-            (async function() {
-                const dpeepUser = getUserContainer(gunUser); // Load currently loggin user
+    //         (async function() {
+    //             const dpeepUser = getUserContainer(gunUser); // Load currently loggin user
 
-                // Load the profile on to dpeepUser
-                await loadProfile(dpeepUser);
+    //             // Load the profile on to dpeepUser
+    //             await loadProfile(dpeepUser);
 
-                setUser(dpeepUser);
-            })()
-        }, [isLoggedIn, setUser, getUserContainer, gunUser, loadProfile]);
+    //             setUser(dpeepUser);
+    //         })()
+    //     }, [isLoggedIn, setUser, getUserContainer, gunUser, loadProfile]);
 
 
     const value = React.useMemo(
-        () => ({ 
-            user, users, gun, isLoggedIn, feed, feedIndex, userSignUp, loginPassword, logoutUser, setProfile, getUserContainerById, loadProfile, followUser
+        () => ({
+            user, users, gun, isLoggedIn, feed, feedIndex, userSignUp, loginPassword, logout, setProfile, getUserContainerById, loadProfile, followUser
         }),
         [
-            user, users, gun, isLoggedIn, feed, feedIndex, userSignUp, loginPassword, logoutUser, setProfile, getUserContainerById, loadProfile, followUser
+            user, users, gun, isLoggedIn, feed, feedIndex, userSignUp, loginPassword, logout, setProfile, getUserContainerById, loadProfile, followUser
         ]
-      );
-    
+    );
+
     return <UserContext.Provider value={value} {...props} />;
 };
 

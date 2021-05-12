@@ -80,7 +80,8 @@ const FeedList = () => {
         await Promise.all(addLatestTweets);
 
     })()
-  }, [isLoggedIn, userContainer, getUserContainerById, addLatestTweet, subscribeTweets]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn, userContainer]);
 
   if(!feed && !feedUpdated) return <Loader />;
  
