@@ -1,30 +1,21 @@
-import React from "react";
-import { useMutation } from "@apollo/react-hooks";
+import React  from "react";
 import { toast } from "react-toastify";
 import useInput from "../../hooks/useInput";
 import Input from ".././Input";
 import Button from "../../styles/Button";
 import Form from "../../styles/Form";
-import { displayError } from "../../utils";
-import { LOGIN } from "../../queries/auth";
+//import { displayError } from "../../utils";
+//import Loader from "../Loader";
+import useUser from '../../hooks/useUser';
 
-export default ({ changeToSignup }) => {
-  const email = useInput("");
-  const password = useInput("");
 
-  const [loginMutation, { loading }] = useMutation(LOGIN, {
-    update: (cache, { data: { login } }) => {
-      localStorage.setItem("token", login.token);
-      localStorage.setItem("user", JSON.stringify(login.user));
+const Login = ({ changeToSignup }) => {
+  const email = useInput("t");
+  const password = useInput("1");
 
-      cache.writeData({
-        data: {
-          isLoggedIn: true,
-          user: JSON.parse(localStorage.getItem("user")),
-        },
-      });
-    },
-  });
+  const loading = false;
+
+  const { loginPassword } = useUser();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -33,18 +24,10 @@ export default ({ changeToSignup }) => {
       return toast.error("You need to fill all the fields");
     }
 
-    try {
-      await loginMutation({
-        variables: {
-          email: email.value,
-          password: password.value,
-        },
-      });
+    const result = await loginPassword(email.value, password.value);
 
-      toast.success(`You are logged in`);
-    } catch (err) {
-      return displayError(err);
-    }
+    if(!result.success)
+      toast.error(result.msg, { autoClose: 5000});
 
     [email, password].map((field) => field.setValue(""));
   };
@@ -52,8 +35,8 @@ export default ({ changeToSignup }) => {
   return (
     <Form center onSubmit={handleLogin}>
       <Input
-        text="Email"
-        type="email"
+        text="Handle"
+        type="text"
         value={email.value}
         onChange={email.onChange}
       />
@@ -74,3 +57,5 @@ export default ({ changeToSignup }) => {
     </Form>
   );
 };
+
+export default Login;

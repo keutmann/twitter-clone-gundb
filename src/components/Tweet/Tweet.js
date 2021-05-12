@@ -1,13 +1,15 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import moment from "moment";
-import DeleteTweet from "./DeleteTweet";
+//import DeleteTweet from "./DeleteTweet";
 import LikeTweet from "./LikeTweet";
 import Retweet from "./Retweet";
 import { CommentIcon } from "../Icons";
-import Avatar from "../../styles/Avatar";
-import TweetFile from "../../styles/TweetFile";
+//import TweetFile from "../../styles/TweetFile";
+import useUser from "../../hooks/useUser";
+import AvatarIdenticon from "../AvatarIdenticon";
+
 
 const Wrapper = styled.div`
   display: flex;
@@ -89,46 +91,49 @@ const Wrapper = styled.div`
   }
 `;
 
-const Tweet = ({ tweet }) => {
-  const {
-    id,
-    text,
-    tags,
-    user,
-    files,
-    isTweetMine,
-    isLiked,
-    likesCount,
-    isRetweet,
-    retweetsCount,
-    commentsCount,
-    createdAt,
-  } = tweet;
+const Tweet = ({ item }) => {
 
-  const strList = text.split(" ");
-  const processedText = strList.filter((str) => !str.startsWith("#")).join(" ");
-  const handle = user && user.handle;
+  const { loadProfile } = useUser();
+
+  const [ profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    if (item.user.profile) {
+      setProfile(item.user.profile);
+    } else {
+      (async ()=>{
+        setProfile(await loadProfile(item.user));
+      })();
+    }
+  }, [loadProfile, setProfile, item])
+
+  const userid = item.user.id;
+  const handle = (profile && profile.handle) || `${userid.substring(0,4)}...${userid.substring(userid.length - 4, userid.length)}`;
+  const displayname =(profile &&  profile.displayname) || "Anonymous";
+  // const strList = text.split(" ");
+  // const processedText = strList.filter((str) => !str.startsWith("#")).join(" ");
+  // // const handle = user && user.handle;
 
   return (
     <Wrapper>
-      <Link to={`/${handle}`}>
-        <Avatar className="avatar" src={user && user.avatar} alt="avatar" />
+      <Link to={`/${userid}`}>
+        <AvatarIdenticon id={userid} profile={profile} />
       </Link>
 
       <div className="tweet-info">
         <div className="tweet-info-user">
-          <Link to={`/${handle}`}>
-            <span className="username">{user && user.fullname}</span>
+          <Link to={`/${userid}`}>
+            <span className="username">{displayname}</span>
             <span className="secondary">{`@${handle}`}</span>
-            <span className="secondary">{moment(createdAt).fromNow()}</span>
+            <span className="secondary">- {moment(item.createdAt).fromNow()}</span>
           </Link>
         </div>
 
-        <Link to={`/${handle}/status/${id}`}>
-          <p>{processedText}</p>
+        <Link to={`/${userid}/status/${item.id}`}>
+          <p>{item.tweet.text}</p>
         </Link>
 
-        <div className="tags">
+        {/* <div className="tags">
           {tags.length
             ? tags.map((tag) => (
                 <span key={tag} className="tag">
@@ -136,39 +141,39 @@ const Tweet = ({ tweet }) => {
                 </span>
               ))
             : null}
-        </div>
+        </div> */}
 
-        <Link to={`/${handle}/status/${id}`}>
+        {/* <Link to={`/${handle}/status/${id}`}>
           {files && files.length && files[0] ? (
             <TweetFile src={files[0].url} alt="tweet-file" />
           ) : null}
-        </Link>
+        </Link> */}
 
         <div className="tweet-stats">
           <div>
             <span className="comment">
-              <Link to={`/${handle}/status/${id}`}>
+              <Link to={`/${userid}/status/${item.id}`}>
                 <CommentIcon />
-                {commentsCount ? commentsCount : null}
+                {0 ? 0 : null}
               </Link>
             </span>
           </div>
 
           <div>
             <Retweet
-              id={id}
-              isRetweet={isRetweet}
-              retweetsCount={retweetsCount}
+              id={item.id}
+              isRetweet={true}
+              retweetsCount={0}
             />
           </div>
 
           <div>
-            <LikeTweet id={id} isLiked={isLiked} likesCount={likesCount} />
+            <LikeTweet id={item.id} isLiked={false} likesCount={0} />
           </div>
 
-          <div>
+          {/* <div>
             <span>{isTweetMine ? <DeleteTweet id={id} /> : null}</span>
-          </div>
+          </div> */}
         </div>
       </div>
     </Wrapper>

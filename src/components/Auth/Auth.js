@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import Login from "./Login";
 import Signup from "./Signup";
 
-const Auth = () => {
+const Auth = (prop) => {
   const [authAction, setAuthAction] = useState("LOGIN");
   const changeToLogin = () => setAuthAction("LOGIN");
   const changeToSignup = () => setAuthAction("SIGNUP");
+
 
   return (
     <>

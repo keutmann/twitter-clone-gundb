@@ -1,11 +1,7 @@
-import React from "react";
-import { useQuery } from "@apollo/react-hooks";
+//import React, { useContext } from "react";
 import styled from "styled-components";
 import Header from "../Header";
-import Loader from "../Loader";
 import EditProfileForm from "./EditProfileForm";
-import { USER } from "../../queries/client";
-import { PROFILE } from "../../queries/profile";
 
 const Wrapper = styled.div`
 	padding-bottom: 5rem;
@@ -56,20 +52,12 @@ const Wrapper = styled.div`
 `;
 
 const EditProfile = () => {
-	const {
-		data: { user }
-	} = useQuery(USER);
-	const { data, loading } = useQuery(PROFILE, {
-		variables: { handle: user.handle }
-	});
-
-	if (loading) return <Loader />;
 
 	return (
 		<Wrapper>
 			<Header>Edit Profile</Header>
 			<div className="flex-wrapper">
-				<EditProfileForm profile={data && data.profile} />
+				<EditProfileForm />
 			</div>
 		</Wrapper>
 	);

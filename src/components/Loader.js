@@ -26,8 +26,9 @@ const Wrapper = styled.div`
   }
 `;
 
-export default () => (
+const Loader = () => (
   <Wrapper>
     <LoadingIcon />
   </Wrapper>
 );
+export default Loader;

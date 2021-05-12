@@ -1,9 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import { useQuery } from "@apollo/react-hooks";
 import { Link, NavLink } from "react-router-dom";
-import MorePopup from "../MorePopup";
-import { USER } from "../../queries/client";
 import {
   Logo,
   HomeIcon,
@@ -12,6 +9,10 @@ import {
   ProfileIcon,
   BmIcon,
 } from "../Icons";
+import Loader from "../Loader";
+import useUser from '../../hooks/useUser';
+import MorePopup from "../MorePopup";
+
 
 const Wrapper = styled.nav`
   width: 14.6%;
@@ -98,10 +99,11 @@ const Wrapper = styled.nav`
 `;
 
 const Nav = () => {
-  const {
-    data: { user },
-  } = useQuery(USER);
+  const { user } = useUser();
 
+  if (!user) return <Loader />;
+  const userid = user.gunUser.is.pub; 
+  
   return (
     <Wrapper>
       <ul>
@@ -131,22 +133,23 @@ const Nav = () => {
           </NavLink>
         </li>
         <li>
-          <NavLink activeClassName="selected" to={`/${user.handle}`}>
+          <NavLink activeClassName="selected" to={`/${userid}`}>
             <ProfileIcon /> <span>Profile</span>
           </NavLink>
         </li>
         <li>
           <MorePopup />
         </li>
-        {/* <li> */}
-        {/* 	<Logout /> */}
-        {/* </li> */}
-        {/* <li style={{ display: "" }}> */}
-        {/* 	<ToggleTheme /> */}
-        {/* </li> */}
       </ul>
     </Wrapper>
   );
 };
 
 export default Nav;
+
+/* <li> 
+<logout /> 
+</li> 
+<li style={{ display: "" }}> 
+<ToggleTheme /> 
+</li>  */

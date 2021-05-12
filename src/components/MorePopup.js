@@ -27,7 +27,7 @@ const MoreBtn = React.forwardRef(({ open, ...props }, ref) => {
   );
 });
 
-export default () => {
+const MorePopup = () => {
   const theme = useContext(ThemeContext);
 
   const contentStyle = {
@@ -53,10 +53,12 @@ export default () => {
         overlayStyle={overlayStyle}
         arrow={false}
       >
-        <ToggleTheme />
-        <ChangeColor />
+        <ToggleTheme  />
+        <ChangeColor  />
         <Logout />
-      </Popup>
+      </Popup> 
     </Wrapper>
   );
 };
+
+export default MorePopup;

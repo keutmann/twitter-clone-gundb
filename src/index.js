@@ -1,15 +1,14 @@
 import React from "react";
 import { render } from "react-dom";
-import { ApolloProvider } from "@apollo/react-hooks";
 import App from "./App";
-import client from "./apollo/client";
+import { AppProviders } from './context';
 import { ThemeProvider } from "./context/ThemeContext";
 
 const RootApp = () => (
-  <ApolloProvider client={client}>
-    <ThemeProvider>
-      <App />
-    </ThemeProvider>
-  </ApolloProvider>
+  <AppProviders>
+     <ThemeProvider>
+       <App />
+     </ThemeProvider>
+  </AppProviders>
 );
 render(<RootApp />, document.getElementById("root"));

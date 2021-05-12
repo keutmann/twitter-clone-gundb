@@ -32,7 +32,7 @@ const Wrapper = styled.div`
     `}
 `;
 
-export default ({
+const Input = ({
   lg = false,
   type = "text",
   text,
@@ -53,3 +53,4 @@ export default ({
     </Wrapper>
   );
 };
+export default Input;

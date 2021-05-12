@@ -2,17 +2,15 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { toast } from "react-toastify";
 import TextareaAutosize from "react-textarea-autosize";
-import { useQuery, useMutation } from "@apollo/react-hooks";
 import useInput from "../../hooks/useInput";
 import Button from "../../styles/Button";
 import TweetFile from "../../styles/TweetFile";
 import { UploadFileIcon } from "../Icons";
 import { displayError } from "../../utils";
-import Avatar from "../../styles/Avatar";
+import AvatarIdenticon from "../AvatarIdenticon";
 import { uploadImage } from "../../utils";
-import { USER } from "../../queries/client";
-import { FEED } from "../../queries/others";
-import { NEW_TWEET } from "../../queries/tweet";
+import Loader from "../Loader";
+import useUser  from '../../hooks/useUser';
 
 const Wrapper = styled.div`
   display: flex;
@@ -52,31 +50,42 @@ const Wrapper = styled.div`
   }
 `;
 
+// const Avatar = styled(Identicon)`
+//   height: ${(props) => (props.lg ? "130px" : "40px")};
+//   width: ${(props) => (props.lg ? "130px" : "40px")};
+//   object-fit: cover;
+//   border-radius: 50%;
+//   margin-right: 1rem;
+//   margin-bottom: 1rem;
+
+//   @media screen and (max-width: 530px) {
+//     height: ${(props) => (props.lg ? "110px" : "40px")};
+//     width: ${(props) => (props.lg ? "110px" : "40px")};
+//   }
+// `;
+
+
 const NewTweet = () => {
   const [tweetFiles, setTweetFiles] = useState([]);
   const tweet = useInput("");
 
-  const [newTweetMutation, { loading }] = useMutation(NEW_TWEET, {
-    refetchQueries: [{ query: FEED }],
-  });
+  const { user, createTweet } = useUser();
+
+
+  if (!user) return <Loader />;
 
   const handleNewTweet = async (e) => {
     e.preventDefault();
 
     if (!tweet.value) return toast("Write something");
 
-    const tags = tweet.value.split(" ").filter((str) => str.startsWith("#"));
+    const tags = tweet.value.split(" ").filter((str) => str.startsWith("#")).join(', ');
 
     try {
-      await newTweetMutation({
-        variables: {
-          text: tweet.value,
-          tags,
-          files: tweetFiles,
-        },
-      });
+      let tweetdata = { "text" : tweet.value, "tags": tags };
+      createTweet(tweetdata);
 
-      toast.success("Your tweet has been posted");
+      //toast.success("Your tweet has been posted");
     } catch (err) {
       return displayError(err);
     }
@@ -90,13 +99,14 @@ const NewTweet = () => {
     setTweetFiles([...tweetFiles, imageUrl]);
   };
 
-  const {
-    data: { user },
-  } = useQuery(USER);
+
 
   return (
     <Wrapper>
-      <Avatar src={user.avatar} alt="avatar" />
+
+      <AvatarIdenticon id={user.id} profile={user.profile} />
+      {/* <Identicon string={user.id} size="32" /> */}
+      {/* <Avatar src={profile && profile.avatar} alt="avatar" /> */}
       <form onSubmit={handleNewTweet}>
         <div className="new-tweet">
           <TextareaAutosize
@@ -118,7 +128,7 @@ const NewTweet = () => {
               </label>
               <input id="file-input" accept="image/*" type="file" onChange={handleTweetFiles} />
             </div>
-            <Button sm disabled={loading}>
+            <Button sm disabled={false}>
               Tweet
             </Button>
           </div>

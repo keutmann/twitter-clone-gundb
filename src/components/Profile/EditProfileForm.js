@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { withRouter } from "react-router-dom";
-import { useMutation } from "@apollo/react-hooks";
 import { toast } from "react-toastify";
 import useInput from "../../hooks/useInput";
 import Input from "../Input";
@@ -11,14 +10,21 @@ import { displayError } from "../../utils";
 import CoverPhoto from "../../styles/CoverPhoto";
 import Avatar from "../../styles/Avatar";
 import { uploadImage } from "../../utils";
-import { PROFILE, EDIT_PROFILE } from "../../queries/profile";
+import useUser from "../../hooks/useUser";
 
-const EditProfileForm = ({ profile, history }) => {
+
+const EditProfileForm = ({ history }) => {
+
+  const { user, setProfile } = useUser();
+
   const [avatarState, setAvatar] = useState("");
   const [coverPhotoState, setCoverPhoto] = useState("");
 
-  const firstname = useInput(profile && profile.firstname);
-  const lastname = useInput(profile && profile.lastname);
+  const profile = user.profile;
+  const loading = !profile; // The profile object has not been loaded yet.
+
+
+  const displayname = useInput(profile && profile.displayname);
   const location = useInput(profile && profile.location);
   const website = useInput(profile && profile.website);
   const dob = useInput(profile && profile.dob);
@@ -26,32 +32,26 @@ const EditProfileForm = ({ profile, history }) => {
   const bio = useInput(profile && profile.bio);
   const coverPhoto = useInput(profile && profile.coverPhoto);
 
-  const handle = profile && profile.handle;
+  const handle = user.id;
 
-  const [editProfileMutation, { loading }] = useMutation(EDIT_PROFILE, {
-    refetchQueries: [{ query: PROFILE, variables: { handle } }],
-  });
 
   const handleEditProfile = async (e) => {
     e.preventDefault();
 
-    if (!firstname.value || !lastname.value) {
-      return toast.error("You cannot leaveout firstname/lastname empty");
-    }
-
     try {
-      await editProfileMutation({
-        variables: {
-          firstname: firstname.value,
-          lastname: lastname.value,
+      let formData ={
+          displayname: displayname.value,
           dob: dob.value,
           bio: bio.value,
           location: location.value,
           website: website.value,
           avatar: avatarState ? avatarState : avatar.value,
-          coverPhoto: coverPhotoState ? coverPhotoState : coverPhoto.value,
-        },
-      });
+          coverPhoto: coverPhotoState ? coverPhotoState : coverPhoto.value
+      };
+
+      let updatedData = Object.assign(profile, formData);
+
+      setProfile(updatedData);
 
       toast.success("Your profile has been updated 🥳");
     } catch (err) {
@@ -59,8 +59,7 @@ const EditProfileForm = ({ profile, history }) => {
     }
 
     [
-      firstname,
-      lastname,
+      displayname,
       dob,
       location,
       website,
@@ -104,15 +103,9 @@ const EditProfileForm = ({ profile, history }) => {
 
       <Input
         lg={true}
-        text="First Name"
-        value={firstname.value}
-        onChange={firstname.onChange}
-      />
-      <Input
-        lg={true}
-        text="Last Name"
-        value={lastname.value}
-        onChange={lastname.onChange}
+        text="Display Name"
+        value={displayname.value}
+        onChange={displayname.onChange}
       />
       <div className="bio-wrapper">
         <label className="bio" htmlFor="bio">

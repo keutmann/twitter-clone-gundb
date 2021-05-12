@@ -3,7 +3,7 @@ import { ThemeContext } from "../context/ThemeContext";
 import { ColorIcon } from "./Icons";
 import { Wrapper } from "./ToggleTheme";
 
-export default () => {
+const ChangeColor = () => {
   const { theme, setTheme } = useContext(ThemeContext);
 
   const colors = [
@@ -17,7 +17,7 @@ export default () => {
 
   const [currentColor, setCurrentColor] = useState(colors[0]);
 
-  const changeColor = () => {
+  const handler = () => {
     let newAccentColor;
 
     if (colors.indexOf(currentColor) === colors.length - 1) {
@@ -35,9 +35,11 @@ export default () => {
   };
 
   return (
-    <Wrapper onClick={changeColor}>
+    <Wrapper onClick={handler}>
       <ColorIcon sm color={theme.accentColor} />
       <p>Color</p>
     </Wrapper>
   );
 };
+
+export default ChangeColor;

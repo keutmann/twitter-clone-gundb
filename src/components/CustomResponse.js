@@ -16,8 +16,9 @@ const Wrapper = styled.div`
   }
 `;
 
-export default ({ text }) => (
+const CustomResponse = ({ text }) => (
   <Wrapper>
     <p>{text}</p>
   </Wrapper>
 );
+export default CustomResponse;

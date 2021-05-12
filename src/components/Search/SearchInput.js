@@ -1,15 +1,15 @@
 import React from "react";
 import styled from "styled-components";
 import { toast } from "react-toastify";
-import { useLazyQuery } from "@apollo/react-hooks";
+//import { useLazyQuery } from "@apollo/react-hooks";
 import useInput from "../../hooks/useInput";
 import { displayError } from "../../utils";
-import {
-  SEARCH_BY_USER,
-  SEARCH_BY_TAG,
-  SEARCH_BY_TWEET,
-} from "../../queries/search";
-import SearchResult from "./SearchResult";
+// import {
+//   SEARCH_BY_USER,
+//   SEARCH_BY_TAG,
+//   SEARCH_BY_TWEET,
+// } from "../../queries/search";
+//import SearchResult from "./SearchResult";
 
 const Wrapper = styled.div`
   margin: 1rem 0;
@@ -37,20 +37,20 @@ const Wrapper = styled.div`
 const SearchInput = () => {
   const term = useInput("");
 
-  const [
-    searchByTag,
-    { data: searchTagData, loading: searchTagLoading },
-  ] = useLazyQuery(SEARCH_BY_TAG);
+  // const [
+  //   searchByTag,
+  //   { data: searchTagData, loading: searchTagLoading },
+  // ] = useLazyQuery(SEARCH_BY_TAG);
 
-  const [
-    searchByTweet,
-    { data: searchTweetData, loading: searchTweetLoading },
-  ] = useLazyQuery(SEARCH_BY_TWEET);
+  // const [
+  //   searchByTweet,
+  //   { data: searchTweetData, loading: searchTweetLoading },
+  // ] = useLazyQuery(SEARCH_BY_TWEET);
 
-  const [
-    searchByUser,
-    { data: searchUserData, loading: searchUserLoading },
-  ] = useLazyQuery(SEARCH_BY_USER);
+  // const [
+  //   searchByUser,
+  //   { data: searchUserData, loading: searchUserLoading },
+  // ] = useLazyQuery(SEARCH_BY_USER);
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -60,9 +60,9 @@ const SearchInput = () => {
     }
 
     try {
-      await searchByTag({ variables: { term: term.value } });
-      await searchByTweet({ variables: { term: term.value } });
-      await searchByUser({ variables: { term: term.value } });
+      // await searchByTag({ variables: { term: term.value } });
+      // await searchByTweet({ variables: { term: term.value } });
+      // await searchByUser({ variables: { term: term.value } });
     } catch (err) {
       displayError(err);
     }
@@ -81,13 +81,13 @@ const SearchInput = () => {
           />
         </form>
       </Wrapper>
-      <SearchResult
+      {/* <SearchResult
         searchTagLoading={searchTagLoading}
         searchTweetLoading={searchTweetLoading}
         searchUserLoading={searchUserLoading}
         tags={searchTagData}
         users={searchUserData}
-        tweets={searchTweetData}
+        tweets={searchTweetData} */}
       />
     </>
   );

@@ -1,15 +1,17 @@
-import React from "react";
+import React, { useContext } from "react";
 import styled from "styled-components";
 import { toast } from "react-toastify";
 import TextareaAutosize from "react-textarea-autosize";
-import { useQuery, useMutation } from "@apollo/react-hooks";
+//import {  useMutation } from "@apollo/react-hooks";
 import useInput from "../../hooks/useInput";
 import Button from "../../styles/Button";
 import { displayError } from "../../utils";
 import Avatar from "../../styles/Avatar";
-import { TWEET } from "../../queries/tweet";
-import { ADD_COMMENT } from "../../queries/comment";
-import { USER } from "../../queries/client";
+// import { TWEET } from "../../queries/tweet";
+// import { ADD_COMMENT } from "../../queries/comment";
+//import { USER } from "../../queries/client";
+//import Loader from "../Loader";
+import { UserContext } from "../../context/userContext";
 
 const Wrapper = styled.div`
 	display: flex;
@@ -46,26 +48,27 @@ const Wrapper = styled.div`
 const AddComment = ({ id }) => {
   const comment = useInput("");
 
-  const [addCommentMutation, { loading }] = useMutation(ADD_COMMENT, {
-    update: (cache, payload) => {
-      const { tweet } = cache.readQuery({
-        query: TWEET,
-        variables: {
-          id,
-        },
-      });
+  // const [addCommentMutation, { loading }] = useMutation(ADD_COMMENT, {
+  //   update: (cache, payload) => {
+  //     const { tweet } = cache.readQuery({
+  //       query: TWEET,
+  //       variables: {
+  //         id,
+  //       },
+  //     });
 
-      let comments = tweet.comments;
-      comments = [...comments, payload.data.addComment];
+  //     let comments = tweet.comments;
+  //     comments = [...comments, payload.data.addComment];
 
-      cache.writeQuery({
-        query: TWEET,
-        data: {
-          tweet: { ...tweet, commentsCount: tweet.commentsCount + 1, comments },
-        },
-      });
-    },
-  });
+  //     cache.writeQuery({
+  //       query: TWEET,
+  //       data: {
+  //         tweet: { ...tweet, commentsCount: tweet.commentsCount + 1, comments },
+  //       },
+  //     });
+  //   },
+  // });
+  const loading = true;
 
   const handleAddComment = async (e) => {
     e.preventDefault();
@@ -73,12 +76,12 @@ const AddComment = ({ id }) => {
     if (!comment.value) return toast("Reply something");
 
     try {
-      await addCommentMutation({
-        variables: {
-          id,
-          text: comment.value,
-        },
-      });
+      // await addCommentMutation({
+      //   variables: {
+      //     id,
+      //     text: comment.value,
+      //   },
+      // });
 
       toast.success("Your reply has been added");
     } catch (err) {
@@ -88,13 +91,11 @@ const AddComment = ({ id }) => {
     comment.setValue("");
   };
 
-  const {
-    data: { user },
-  } = useQuery(USER);
+  const {user } = useContext(UserContext);
 
   return (
     <Wrapper>
-      <Avatar src={user.avatar} alt="avatar" />
+      <Avatar src={user && user.profile.avatar} alt="avatar" />
 
       <form onSubmit={handleAddComment}>
         <div className="add-comment">

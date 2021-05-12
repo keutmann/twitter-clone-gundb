@@ -1,20 +1,21 @@
 import React, { useState } from "react";
-import { useMutation } from "@apollo/react-hooks";
+//import { useMutation } from "@apollo/react-hooks";
 import { toast } from "react-toastify";
 import { RetweetIcon, RtFillIcon } from "../Icons";
-import { TOGGLE_RETWEET } from "../../queries/tweet";
+// import { TOGGLE_RETWEET } from "../../queries/tweet";
 import { displayError } from "../../utils";
 
 const Retweet = ({ id, isRetweet, retweetsCount }) => {
   const [retweet, setRetweet] = useState(isRetweet);
   const [retweetsCountState, setRetweetsCount] = useState(retweetsCount);
-  const [toggleRetweetMutation, { loading }] = useMutation(TOGGLE_RETWEET, {
-    variables: { id },
-  });
+  // const [toggleRetweetMutation, { loading }] = useMutation(TOGGLE_RETWEET, {
+  //   variables: { id },
+  // });
 
+  const loading = true;
   const handleRetweet = async () => {
     try {
-      await toggleRetweetMutation();
+      //await toggleRetweetMutation();
       setRetweet(!retweet);
       if (retweet) {
         setRetweetsCount(retweetsCountState - 1);

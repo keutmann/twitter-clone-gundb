@@ -1,35 +1,29 @@
 import React, { useState } from "react";
-import { useMutation } from "@apollo/react-hooks";
 import Button from "../../styles/Button";
 import { displayError } from "../../utils";
-import { FEED, USERS } from "../../queries/others";
-import { FOLLOW, UNFOLLOW } from "../../queries/follow";
+import useUser from "../../hooks/useUser";
 
 const Follow = ({ isFollowing, id, sm = false, relative = false }) => {
+
+  const { user: loggedInUser, getUserContainerById } = useUser();
+
   const [followState, setFollowState] = useState(isFollowing);
 
-  const [followMutation] = useMutation(FOLLOW, {
-    variables: { id },
-    refetchQueries: [{ query: FEED }, { query: USERS }],
-  });
-
-  const [unfollowMutation] = useMutation(UNFOLLOW, {
-    variables: { id },
-    refetchQueries: [{ query: FEED }, { query: USERS }],
-  });
 
   const handleFollow = async () => {
     if (followState) {
       setFollowState(false);
       try {
-        await unfollowMutation();
+        // Unfollow
+        loggedInUser.followsNode.get(id).put(null);
       } catch (err) {
         displayError(err);
       }
     } else {
       setFollowState(true);
       try {
-        await followMutation();
+        const followuser = getUserContainerById(id);
+        loggedInUser.followsNode.get(id).put(followuser.gunUser);
       } catch (err) {
         displayError(err);
       }
@@ -37,7 +31,7 @@ const Follow = ({ isFollowing, id, sm = false, relative = false }) => {
   };
 
   return (
-    <Button outline sm={sm} relative={relative} onClick={handleFollow}>
+    <Button outline={!followState} sm={sm} relative={relative} onClick={handleFollow}>
       {followState ? "Following" : "Follow"}
     </Button>
   );

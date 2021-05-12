@@ -1,12 +1,12 @@
-import React from "react";
-import { useQuery } from "@apollo/react-hooks";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import Header from "../Header";
 import ProfileInfo from "./ProfileInfo";
-import Tweet from "../Tweet/Tweet";
+//import Tweet from "../Tweet/Tweet";
 import Loader from "../Loader";
-import { PROFILE } from "../../queries/profile";
+import useUser from "../../hooks/useUser";
+//import resources from "../../utils/resources";
 
 const Wrapper = styled.div`
 	padding-bottom: 5rem;
@@ -25,32 +25,44 @@ const Wrapper = styled.div`
 `;
 
 const Profile = () => {
-  const { handle } = useParams();
+  const { isLoggedIn, users, user, loadProfile } = useUser();
+  const { handle } = useParams(); 
+  const [ profile, setProfile] = useState(null);
 
-  const { data, loading } = useQuery(PROFILE, {
-    variables: { handle },
-  });
+  console.log("Profile handle: "+handle)
 
-  if (loading) return <Loader />;
+  useEffect(() => {
+    const viewedUser = users[handle];
+    if(!viewedUser) return;
+    (async ()=>{
+      setProfile(await loadProfile(viewedUser));
+    })();
+  }, [loadProfile, users, user, handle])
+
+  if (!profile) {
+    return <Loader />;
+  }
+
+  const isSelf = (isLoggedIn) ? handle === user.gunUser.is.pub : false;
 
   return (
     <Wrapper>
       <Header>
         <div className="profile-top">
-          <span>{data && data.profile && data.profile.fullname}</span>
-          <span className="tweetsCount">
-            {data && data.profile && data.profile.tweetsCount
-              ? `${data.profile.tweetsCount} Tweets`
+          <span>{profile.handle}</span>
+          {/* <span className="tweetsCount">
+            {profile && profile.tweetsCount
+              ? `${profile.tweetsCount} Tweets`
               : "No Tweets"}
-          </span>
+          </span> */}
         </div>
       </Header>
-      <ProfileInfo profile={data && data.profile} />
-      {data && data.profile && data.profile.tweets && data.profile.tweets.length
-        ? data.profile.tweets.map((tweet) => (
+      <ProfileInfo profile={profile} isSelf={isSelf} />
+      {/* {profile && profile.tweets && profile.tweets.length
+        ? profile.tweets.map((tweet) => (
             <Tweet key={tweet.id} tweet={tweet} />
           ))
-        : null}
+        : null} */}
     </Wrapper>
   );
 };

@@ -40,3 +40,9 @@ export const uploadImage = async (file) => {
 
   return data.secure_url;
 };
+
+export const instantiateNewGun = (Gun, opts) => () => {
+  return Gun(opts);
+};
+
+

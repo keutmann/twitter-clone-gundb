@@ -77,7 +77,7 @@ const Wrapper = styled.div`
   }
 `;
 
-const ProfileInfo = ({ profile }) => {
+const ProfileInfo = ({ profile, isSelf }) => {
   if (!profile) {
     return (
       <CustomResponse text="Oops, you are trying to visit a profile which seems to be doesn't exist. Make sure the profile handle exists" />
@@ -91,13 +91,12 @@ const ProfileInfo = ({ profile }) => {
     bio,
     location,
     website,
-    isSelf,
     dob,
     isFollowing,
     followersCount,
     followingCount,
     handle,
-    fullname,
+    displayname,
   } = profile;
 
   return (
@@ -121,7 +120,7 @@ const ProfileInfo = ({ profile }) => {
       )}
 
       <div className="profile-name-handle">
-        <span className="fullname">{fullname}</span>
+        <span className="fullname">{displayname}</span>
         <span className="handle">{`@${handle}`}</span>
       </div>
 
