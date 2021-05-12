@@ -7,6 +7,7 @@ import 'gun/lib/radisk';
 import 'gun/lib/store';
 import 'gun/lib/rindexed';
 import 'gun/lib/then';
+import moment from 'moment'
 
 import { sha256 } from '../utils/crypto';
 
@@ -32,6 +33,7 @@ const UserProvider = (props) => {
     // The feed is global, so its available for build up in the background
     const [feed, setFeed] = useState([]);
     const [feedIndex, setFeedIndex] = useState({});
+    const [feedUpdated, setFeedUpdated] = useState(null);
 
 
     const login = React.useCallback(
@@ -104,6 +106,7 @@ const UserProvider = (props) => {
         // Load the profile on to dpeepUser
         await loadProfile(dpeepUser);
         setUser(dpeepUser);
+        initializeFeed(dpeepUser);
     });
 
 
@@ -188,6 +191,63 @@ const UserProvider = (props) => {
     );
 
 
+    // Methods ----------------------------------------------------------------------
+    const addFeed = React.useCallback((data, date, sourceUser) => {
+        const soul = Gun.node.soul(data);
+        const id = soul.split('/').pop();
+        if (feedIndex[soul]) // Do tweet already exit in feed?
+            return false; // No need re-update
+
+        const item = {
+            soul: soul,
+            id: id,
+            tweet: data,
+            user: sourceUser,
+            createdAt: date
+        }
+
+        feed.unshift(item); // Make sure not to add the same object more than once to the list.
+        feedIndex[soul] = item; // Use index, so the data only gets added to the feed once.
+        return true;
+
+    }, [feed, feedIndex]); // User here is the viewer
+
+    const addLatestTweet = React.useCallback(async (user) => {
+        //let [latestNode, latestDate] = await user.tweetsNode.latest();
+        const latest = await user.tweetsNode.get(resources.node.names.latest).once().then();
+        if (latest) {
+            const date = moment(latest.createdAt);
+            addFeed(latest, date, user);
+        }
+    }, [addFeed]);
+
+    const subscribeTweets = React.useCallback((user) => {
+        user.tweetsNode.get(resources.node.names.latest).on((tweet, key) => {
+            const date = moment(tweet.createdAt);
+            addFeed(tweet, date, user);
+        });
+    }, [addFeed]);
+
+
+    // Build up users collection, needs refactoring, as it gets called multiple times.
+    const initializeFeed = async (userContainer) => {
+        console.log("Subscribing to users feed");
+        await addLatestTweet(userContainer);
+        subscribeTweets(userContainer);
+
+        const followData = await userContainer.followsNode.once().then() || {};
+
+        const addLatestTweets = Object.keys(followData).filter(key => key !== '_' && key !== userContainer.id && followData[key]).map(key => {
+
+            const followUser = getUserContainerById(key);
+
+            subscribeTweets(followUser);
+            return addLatestTweet(followUser);
+        });
+
+        await Promise.all(addLatestTweets);
+        setFeedUpdated('all');
+    };
 
     // UseEffects --------------------------------------------------------------------------------------------
 
@@ -201,31 +261,29 @@ const UserProvider = (props) => {
     }, [signedUp, isLoggedIn]);
 
 
-    // Load profile of   
-    // useEffect(() => {
-    //         if(!isLoggedIn) {
-    //             return;
-    //         } 
-
-    //         if(!gunUser) return;
-
-    //         (async function() {
-    //             const dpeepUser = getUserContainer(gunUser); // Load currently loggin user
-
-    //             // Load the profile on to dpeepUser
-    //             await loadProfile(dpeepUser);
-
-    //             setUser(dpeepUser);
-    //         })()
-    //     }, [isLoggedIn, setUser, getUserContainer, gunUser, loadProfile]);
-
+    // One time only effect 
+    useEffect(() => {
+        if (isLoggedIn) {
+          console.log(`User loggedIn`);
+          return;
+        }
+    
+        // Auto signin the user if keys exist in sessionStorage
+        const keysString = sessionStorage.getItem(dpeepUserKeys);
+        if(keysString && keysString.length > 2) {
+          const keys = JSON.parse(keysString);
+          if(keys)
+            login(keys);
+        }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, []);
 
     const value = React.useMemo(
         () => ({
-            user, users, gun, isLoggedIn, feed, feedIndex, userSignUp, loginPassword, logout, setProfile, getUserContainerById, loadProfile, followUser
+            user, users, gun, isLoggedIn, feed, feedIndex, feedUpdated, userSignUp, loginPassword, logout, setProfile, getUserContainerById, loadProfile, followUser
         }),
         [
-            user, users, gun, isLoggedIn, feed, feedIndex, userSignUp, loginPassword, logout, setProfile, getUserContainerById, loadProfile, followUser
+            user, users, gun, isLoggedIn, feed, feedIndex, feedUpdated, userSignUp, loginPassword, logout, setProfile, getUserContainerById, loadProfile, followUser
         ]
     );
 
