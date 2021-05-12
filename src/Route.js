@@ -16,6 +16,8 @@ import Notifications from "./pages/Notifications";
 import Explore from "./pages/Explore";
 import Suggestion from "./pages/Suggestion";
 import EditProfile from "./components/Profile/EditProfile";
+import Settings from "./pages/Settings";
+
 
 const AppRouter = () => {
   return (
@@ -27,6 +29,7 @@ const AppRouter = () => {
           <Route exact path="/explore" component={Explore} />
           <Route exact path="/notifications" component={Notifications} />
           <Route exact path="/bookmarks" component={Bookmarks} />
+          <Route exact path="/settings" component={Settings} />
           <Route
             exact
             path={`/:handle/status/:tweetId`}

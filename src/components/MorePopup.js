@@ -4,6 +4,7 @@ import styled from "styled-components";
 import Popup from "reactjs-popup";
 import Svg from "../styles/Svg";
 import ToggleTheme from "./ToggleTheme";
+import Settings from "./Settings/SettingsMenuButton";
 import Logout from "./Auth/Logout";
 import ChangeColor from "./ChangeColor";
 
@@ -55,6 +56,7 @@ const MorePopup = () => {
       >
         <ToggleTheme  />
         <ChangeColor  />
+        <Settings />
         <Logout />
       </Popup> 
     </Wrapper>

@@ -146,10 +146,3 @@ const Nav = () => {
 };
 
 export default Nav;
-
-/* <li> 
-<logout /> 
-</li> 
-<li style={{ display: "" }}> 
-<ToggleTheme /> 
-</li>  */
