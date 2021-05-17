@@ -34,12 +34,12 @@ const MasterTweet = () => {
     (async() => {
       const userContainer = getUserContainerById(handle);
       const tweetNode = userContainer.node.tweets.get(tweetId);
-      const tweet = await tweetNode.once().then();
+      const tweet = await tweetNode.once(p=>p, {wait:0}).then();
       const item = createTweetContainer(tweet, userContainer);
       
       setTweetContainer(item);
 
-      const commentsData = await tweetNode.get(resources.node.names.comments).once().then();
+      const commentsData = await tweetNode.get(resources.node.names.comments).once(p=>p, {wait:0}).then();
 
       const arr = Object.keys(commentsData).filter(p=> p !== '_').map(p=> p);
       setComments(arr);

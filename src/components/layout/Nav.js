@@ -99,7 +99,15 @@ const Wrapper = styled.nav`
 `;
 
 const Nav = () => {
-  const { user } = useUser();
+  const { user, feed, feedReady, setFeed, resetFeedReady } = useUser();
+
+  function handleClick() { // Ensure to update the feed list
+    const items = Object.values(feedReady);
+    if(feed && items.length > 0) {
+      setFeed([...items, ...feed]); // Simply copy ready feed, more advanced sorting on date etc. may be implemented.
+      resetFeedReady();
+    }
+  }
 
   if (!user) return <Loader />;
   const userid = user.id; 
@@ -113,7 +121,7 @@ const Nav = () => {
           </h3>
         </Link>
         <li>
-          <NavLink exact activeClassName="selected" to="/">
+          <NavLink exact activeClassName="selected" to="/" onClick={handleClick} >
             <HomeIcon /> <span>Home</span>
           </NavLink>
         </li>

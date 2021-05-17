@@ -24,10 +24,11 @@ const Login = ({ changeToSignup }) => {
       return toast.error("You need to fill all the fields");
     }
 
-    const result = await loginPassword(email.value, password.value);
+    loginPassword(email.value, password.value); // const result = await 
 
-    if(!result.success)
-      toast.error(result.msg, { autoClose: 5000});
+    // Has to be syncron to work
+    // if(!result.success)
+    //   toast.error(result.msg, { autoClose: 5000});
 
     [email, password].map((field) => field.setValue(""));
   };

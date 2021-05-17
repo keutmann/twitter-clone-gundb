@@ -1,9 +1,8 @@
 import React, { useContext } from "react";
 import styled from "styled-components";
-import { CrossIcon } from "../Icons";
+import { SettingsIcon } from "../Icons";
 import { ThemeContext } from "../../context/ThemeContext";
 import { NavLink } from "react-router-dom";
-
 
 export const Wrapper = styled.div`
   display: flex;
@@ -21,12 +20,12 @@ const SettingsMenuButton = () => {
 	const { theme } = useContext(ThemeContext);
 
 	return (
-		<Wrapper>
-			<NavLink activeClassName="selected" to="/settings">
-				<CrossIcon sm color={theme.accentColor} />
-				<span>Settings</span>
-			</NavLink>
-		</Wrapper>
+		<NavLink activeClassName="" to="/settings">
+			<Wrapper>
+				<SettingsIcon sm color={theme.accentColor} />
+				<p>Settings</p>
+			</Wrapper>
+		</NavLink>
 	);
 };
 

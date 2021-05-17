@@ -1,13 +1,13 @@
-import React, { useContext } from "react";
+import React from "react";
 import { toast } from "react-toastify";
-import { UserIcon } from "../Icons";
-import { ThemeContext } from "../../context/ThemeContext";
+import { HomeIcon } from "../Icons";
+//import { ThemeContext } from "../../context/ThemeContext";
 import { Wrapper } from "../ToggleTheme";
 import useUser from '../../hooks/useUser';
 
 
 const Logout = () => {
-	const { theme } = useContext(ThemeContext);
+	//const { theme } = useContext(ThemeContext);
 	const { logout } = useUser();
 	
 	const handleLogout = () => {
@@ -17,7 +17,8 @@ const Logout = () => {
 
 	return (
 		<Wrapper onClick={handleLogout}>
-			<UserIcon sm color={theme.accentColor} />
+			<HomeIcon />
+			{/* UserIcon sm color={theme.accentColor} /> */}
 			<p>Logout</p>
 		</Wrapper>
 	);

@@ -2,10 +2,10 @@ import React, { useEffect, useState, createContext } from 'react';
 import resources from '../utils/resources';
 import Gun from 'gun/gun';
 import sea from 'gun/sea';
-import 'gun/lib/radix';
-import 'gun/lib/radisk';
-import 'gun/lib/store';
-import 'gun/lib/rindexed';
+// import 'gun/lib/radix';
+// import 'gun/lib/radisk';
+// import 'gun/lib/store';
+// import 'gun/lib/rindexed';
 import 'gun/lib/then';
 import { createTweetContainer } from '../utils';
 
@@ -14,6 +14,7 @@ import { sha256 } from '../utils/crypto';
 
 
 const dpeepUserKeys = 'dpeepUserKeys';
+const serverpeers = ['http://localhost:8765/gun'];
 
 
 const UserContext = createContext(null);
@@ -22,18 +23,19 @@ UserContext.displayName = 'userContext';
 
 const UserProvider = (props) => {
 
-    const [gun] = useState(Gun()); // { peers: serverpeers }
+    const [gun] = useState(Gun({ peers: serverpeers })); //{ peers: serverpeers, localStorage: false }{peers: ["http://server-ip-or-hostname:8080/gun"]}
     const [gunUser, setGunUser] = useState(null);
     const [isLoggedIn, setIsLoggedIn] = useState(null);
 
+    const [authenticate, setAuthenticate] = useState(false);
     const [signedUp, setSignedUp] = useState(false);
     const [user, setUser] = useState(null);
     const [users] = useState({});
 
     // The feed is global, so its available for build up in the background
     const [feed, setFeed] = useState(null);
-    const [feedIndex, setFeedIndex] = useState(new Map());
-    const [feedReady, setFeedReady] = useState(new Map());
+    const [feedIndex, setFeedIndex] = useState({});
+    const [feedReady] = useState({});
     const [messageReceived, setMessageReceived] = useState(null);
 
 
@@ -95,20 +97,9 @@ const UserProvider = (props) => {
         setUser(null);
         setFeed([]);
         setFeedIndex({});
+        setAuthenticate(false);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [gunUser]);
-
-    gun.on('auth', async () => {
-        setIsLoggedIn(true);
-        const user = gun.user();
-        setGunUser(user);
-
-        const dpeepUser = getUserContainer(user); // Load currently loggin user
-        // Load the profile on to dpeepUser
-        await loadProfile(dpeepUser);
-        setUser(dpeepUser);
-        initializeFeed(dpeepUser);
-    });
 
 
     const getUserContainer = React.useCallback(
@@ -126,7 +117,7 @@ const UserProvider = (props) => {
 
             const node = { user: gunUser, tweets, profile, follow, people, dpeep };
             const container = { id: pubId, node };
-            users[pubId] = Object.assign(users[pubId] || {}, container);
+            users[pubId] = Object.assign({}, users[pubId], container);
 
             return users[pubId];
         },
@@ -184,9 +175,11 @@ const UserProvider = (props) => {
                     username: 'Anonymous'
                 };
 
-                const loadedProfile = await user.node.profile.once().then() || {};
+                user.profile = Object.assign({}, resources.node.profile, preProfile);
+                user.node.profile.once((val) => {
+                    user.profile = Object.assign({}, user.profile, val);
+                }, {wait:0});
 
-                user.profile = Object.assign({}, resources.node.profile, preProfile, loadedProfile);
             }
             return user.profile;
         },
@@ -194,20 +187,23 @@ const UserProvider = (props) => {
     );
 
 
+
     // Methods ----------------------------------------------------------------------
     const addFeed = React.useCallback((data, sourceUser) => {
 
         const item = createTweetContainer(data, sourceUser);
+        if(feedIndex[item.soul])
+            return true;
 
-        feedIndex.set(item.soul, item); // Use index, so the data only gets added to the feed once.
-        feedReady.set(item.soul, item);
+        feedIndex[item.soul] = item; // Use index, so the data only gets added to the feed once.
+        feedReady[item.soul] = item;
         setMessageReceived(item.soul);
         return true;
 
     }, [feedReady, feedIndex]); // User here is the viewer
 
     const addLatestTweet = React.useCallback(async (user) => {
-        const latest = await user.node.tweets.get(resources.node.names.latest).once().then();
+        const latest = await user.node.tweets.get(resources.node.names.latest).once(p=>p, {wait:0}).then();
         if (latest) {
             addFeed(latest, user);
         }
@@ -226,7 +222,7 @@ const UserProvider = (props) => {
         await addLatestTweet(userContainer);
         subscribeTweets(userContainer);
 
-        const followData = await userContainer.node.follow.once().then() || {};
+        const followData = await userContainer.node.follow.once(p=>p, {wait:0}).then() || {};
 
         const addLatestTweets = Object.keys(followData).filter(key => key !== '_' && key !== userContainer.id && followData[key]).map(key => {
 
@@ -240,7 +236,39 @@ const UserProvider = (props) => {
         //setFeedUpdated('all');
     };
 
+    const resetFeedReady = React.useCallback(() => {
+        Object.keys(feedReady).forEach(p=> delete feedReady[p]);
+    }, [feedReady]);
+
+
+    
+    const onAuth = React.useCallback(() => {
+        setIsLoggedIn(true);
+        const user = gun.user();
+        setGunUser(user);
+
+        const userContainer = getUserContainer(user); // Load currently loggin user
+        // Load the profile on to dpeepUser
+        loadProfile(userContainer);
+        setUser(userContainer);
+        initializeFeed(userContainer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [setIsLoggedIn, setGunUser, getUserContainer, loadProfile, setUser, initializeFeed ]);
+
+
     // UseEffects --------------------------------------------------------------------------------------------
+
+    gun.on('auth', async () => {
+        setAuthenticate(true);
+    });
+
+
+    useEffect(()=> {
+        if(authenticate)
+            onAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [authenticate])
+
 
     // Signup effect, register at the userIndex that we exist.
     useEffect(() => {
@@ -249,7 +277,7 @@ const UserProvider = (props) => {
         gun.get(resources.node.names.dpeep).get(resources.node.names.userIndex).get(user.id).put(user.node.user);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [signedUp, isLoggedIn]);
+    }, [signedUp, isLoggedIn, user]);
 
 
     // One time only effect 
@@ -271,10 +299,10 @@ const UserProvider = (props) => {
 
     const value = React.useMemo(
         () => ({
-            user, users, gun, isLoggedIn, feed, feedIndex, feedReady, messageReceived, userSignUp, loginPassword, logout, setFeed, setFeedReady, setProfile, getUserContainerById, loadProfile, followUser, setMessageReceived
+            user, users, gun, isLoggedIn, feed, feedIndex, feedReady, messageReceived, userSignUp, loginPassword, logout, setFeed, setProfile, getUserContainerById, loadProfile, followUser, setMessageReceived, resetFeedReady
         }),
         [
-            user, users, gun, isLoggedIn, feed, feedIndex, feedReady, messageReceived, userSignUp, loginPassword, logout, setFeed, setFeedReady, setProfile, getUserContainerById, loadProfile, followUser, setMessageReceived
+            user, users, gun, isLoggedIn, feed, feedIndex, feedReady, messageReceived, userSignUp, loginPassword, logout, setFeed, setProfile, getUserContainerById, loadProfile, followUser, setMessageReceived, resetFeedReady
         ]
     );
 

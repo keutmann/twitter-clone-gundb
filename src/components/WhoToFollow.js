@@ -29,8 +29,8 @@ const WhoToFollow = () => {
 		if(list) return;
 
 		(async () => {
-			const availableUsers = await gun.get(resources.node.names.dpeep).get(resources.node.names.userIndex).once().then() || {};
-			const userFollows = await userContainer.node.follow.once().then() || {};
+			const availableUsers = await gun.get(resources.node.names.dpeep).get(resources.node.names.userIndex).once(p=>p, {wait:0}).then() || {};
+			const userFollows = await userContainer.node.follow.once(p=>p,{wait:0}).then() || {};
 			
 			const allUsers = Object.keys(availableUsers).filter(key => key !== '_' && key !== userContainer.id && availableUsers[key]).map(key => {
 				const keyUser = getUserContainerById(key);

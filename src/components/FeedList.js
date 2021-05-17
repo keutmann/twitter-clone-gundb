@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect} from "react";
 import styled from "styled-components";
 import Loader from "./Loader";
 import Tweet from "./Tweet/Tweet";
@@ -12,29 +12,31 @@ const Wrapper = styled.div`
 
 const FeedList = () => {
 
-  const { feed, feedReady, setFeed, setFeedReady, messageReceived } = useUser();
+  const { feed, feedReady, setFeed, resetFeedReady, messageReceived } = useUser();
+  //const [ items, setItems ] = useState();
 
 // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
-    if(!feed && feedReady.size > 0) {
-      setFeed([...feedReady.values()]); // Simply copy ready feed, more advanced sorting on date etc. may be implemented.
-      setFeedReady(new Map());
+    const items = Object.values(feedReady);
+    if(!feed) {
+      setFeed([...items]); // Simply copy ready feed, more advanced sorting on date etc. may be implemented.
+      resetFeedReady();
       console.log("FeedList Initialized");
-    }
-
+    } 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[messageReceived]);
 
-  
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  useEffect(() => {
-    if(feed && feedReady && feedReady.size > 0) {
-      setFeed([...feedReady.values(), ...feed]); // Simply copy ready feed, more advanced sorting on date etc. may be implemented.
-      setFeedReady(new Map());
-        console.log("FeedList setFeed");
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+
+  // // eslint-disable-next-line react-hooks/rules-of-hooks
+  // useEffect(() => {
+  //   const items = Object.values(feedReady);
+  //   if(feed && items.length > 0) {
+  //     setFeed([...items, ...feed]); // Simply copy ready feed, more advanced sorting on date etc. may be implemented.
+  //     resetFeedReady();
+  //     console.log("FeedList setFeed");
+  //   }
+  // // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [])
 
   if(!feed) return <Loader />;
   console.log("FeedList render");
