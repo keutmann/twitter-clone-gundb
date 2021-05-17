@@ -15,7 +15,7 @@ const Follow = ({ isFollowing, id, sm = false, relative = false }) => {
       setFollowState(false);
       try {
         // Unfollow
-        loggedInUser.followsNode.get(id).put(null);
+        loggedInUser.node.follow.get(id).put(null);
       } catch (err) {
         displayError(err);
       }
@@ -23,7 +23,7 @@ const Follow = ({ isFollowing, id, sm = false, relative = false }) => {
       setFollowState(true);
       try {
         const followuser = getUserContainerById(id);
-        loggedInUser.followsNode.get(id).put(followuser.gunUser);
+        loggedInUser.node.follow.get(id).put(followuser.node.user);
       } catch (err) {
         displayError(err);
       }

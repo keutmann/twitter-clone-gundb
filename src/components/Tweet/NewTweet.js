@@ -65,15 +65,15 @@ const NewTweet = () => {
     const tweetId = moment().toISOString();
     tweet.createdAt = tweetId;
 
-    const tweetNode = user.tweetsNode.get(tweetId);
+    const tweetNode = user.node.tweets.get(tweetId);
     const tweetData = await tweetNode.put(tweet);
 
     // Chain up tweets
-    const previousTweetData = await user.tweetsNode.get(resources.node.names.latest).once().then();
+    const previousTweetData = await user.node.tweets.get(resources.node.names.latest).once().then();
     if(previousTweetData)
         tweetNode.get('next').put(previousTweetData);
 
-    user.tweetsNode.get('latest').put(tweetData);
+    user.node.tweets.get('latest').put(tweetData);
 
     // Add comments object from the Gun root, as this is writeable for everone.
     const commentsID = user.id+tweetId;

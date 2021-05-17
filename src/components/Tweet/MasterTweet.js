@@ -13,6 +13,7 @@ import AddComment from "../Comment/AddComment";
 import useUser  from '../../hooks/useUser';
 //import Gun from 'gun';
 import resources from "../../utils/resources";
+import { createTweetContainer } from '../../utils';
 
 const Wrapper = styled.div`
   margin-bottom: 7rem;
@@ -24,27 +25,28 @@ const MasterTweet = () => {
 
 
 
-  const [ tweet, setTweet] = useState();
+  const [ tweetContainer, setTweetContainer] = useState();
   const [ comments, setComments] = useState();
 
   useEffect(() => {
-    if(tweet) return;
+    if(tweetContainer) return;
 
     (async() => {
       const userContainer = getUserContainerById(handle);
-      const tweet = await userContainer.tweetsNode.get(tweetId).once().then();
+      const tweetNode = userContainer.node.tweets.get(tweetId);
+      const tweet = await tweetNode.once().then();
+      const item = createTweetContainer(tweet, userContainer);
+      
+      setTweetContainer(item);
 
-      setTweet(tweet);
-      //tweet.soul = Gun.node.soul(tweet);
-      //tweet.id = tweet.soul.split('/').pop();
-
-      const commentsData = await tweet.get(resources.node.names.comments).once().then();
+      const commentsData = await tweetNode.get(resources.node.names.comments).once().then();
 
       const arr = Object.keys(commentsData).filter(p=> p !== '_').map(p=> p);
       setComments(arr);
     })();
 
-  }, [tweet, handle, tweetId, getUserContainerById, setTweet, setComments]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handle, tweetId]);
 
 
   // const comments =
@@ -53,7 +55,9 @@ const MasterTweet = () => {
   //     : [];
   // comments.sort(sortFn);
 
-  if(!tweet) return <Loader />
+  if(!tweetContainer) return <Loader />
+
+  console.log("MasterTweet Render");
 
   return (
     <Wrapper>
@@ -61,8 +65,8 @@ const MasterTweet = () => {
         <span>Tweet</span>
       </Header>
         <>
-          <Tweet tweet={tweet} />
-          <AddComment id={tweet.id} />
+          <Tweet key={tweetContainer.soul} item={tweetContainer} />
+          <AddComment id={tweetContainer.id} />
           {
             (comments) ?
             comments.map((comment) => (<Comment key={comment} comment={comment} />)) 

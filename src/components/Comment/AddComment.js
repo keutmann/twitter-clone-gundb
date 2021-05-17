@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React from "react";
 import styled from "styled-components";
 import { toast } from "react-toastify";
 import TextareaAutosize from "react-textarea-autosize";
@@ -6,12 +6,14 @@ import TextareaAutosize from "react-textarea-autosize";
 import useInput from "../../hooks/useInput";
 import Button from "../../styles/Button";
 import { displayError } from "../../utils";
-import Avatar from "../../styles/Avatar";
+import AvatarIdenticon from "../AvatarIdenticon";
+//import Avatar from "../../styles/Avatar";
 // import { TWEET } from "../../queries/tweet";
 // import { ADD_COMMENT } from "../../queries/comment";
 //import { USER } from "../../queries/client";
 //import Loader from "../Loader";
-import { UserContext } from "../../context/userContext";
+import Loader from "../Loader";
+import useUser from "../../hooks/useUser";
 
 const Wrapper = styled.div`
 	display: flex;
@@ -46,29 +48,10 @@ const Wrapper = styled.div`
 `;
 
 const AddComment = ({ id }) => {
+
+  const { user } = useUser();
+
   const comment = useInput("");
-
-  // const [addCommentMutation, { loading }] = useMutation(ADD_COMMENT, {
-  //   update: (cache, payload) => {
-  //     const { tweet } = cache.readQuery({
-  //       query: TWEET,
-  //       variables: {
-  //         id,
-  //       },
-  //     });
-
-  //     let comments = tweet.comments;
-  //     comments = [...comments, payload.data.addComment];
-
-  //     cache.writeQuery({
-  //       query: TWEET,
-  //       data: {
-  //         tweet: { ...tweet, commentsCount: tweet.commentsCount + 1, comments },
-  //       },
-  //     });
-  //   },
-  // });
-  const loading = true;
 
   const handleAddComment = async (e) => {
     e.preventDefault();
@@ -91,11 +74,12 @@ const AddComment = ({ id }) => {
     comment.setValue("");
   };
 
-  const {user } = useContext(UserContext);
+
+  if (!user) return <Loader />;
 
   return (
     <Wrapper>
-      <Avatar src={user && user.profile.avatar} alt="avatar" />
+      <AvatarIdenticon id={user.id} profile={user.profile} />
 
       <form onSubmit={handleAddComment}>
         <div className="add-comment">
@@ -108,7 +92,7 @@ const AddComment = ({ id }) => {
           />
 
           <div className="add-comment-action">
-            <Button sm disabled={loading}>
+            <Button sm>
               Reply
             </Button>
           </div>

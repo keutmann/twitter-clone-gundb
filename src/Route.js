@@ -33,7 +33,7 @@ const AppRouter = () => {
           <Route exact path={`/settings/profile`} component={EditProfile} />
           <Route
             exact
-            path={`/:handle/status/:tweetId`}
+            path={`/:handle/time/:tweetId`}
             component={MasterTweet}
           />
           <Route exact path={`/:handle`} component={Profile} />

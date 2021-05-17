@@ -30,7 +30,7 @@ const WhoToFollow = () => {
 
 		(async () => {
 			const availableUsers = await gun.get(resources.node.names.dpeep).get(resources.node.names.userIndex).once().then() || {};
-			const userFollows = await userContainer.followsNode.once().then() || {};
+			const userFollows = await userContainer.node.follow.once().then() || {};
 			
 			const allUsers = Object.keys(availableUsers).filter(key => key !== '_' && key !== userContainer.id && availableUsers[key]).map(key => {
 				const keyUser = getUserContainerById(key);
@@ -43,9 +43,11 @@ const WhoToFollow = () => {
 		
 			setList(allUsers || []);
 		})();
-	}, [list, gun, userContainer, setList, getUserContainerById]);
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [userContainer]);
 
 	if(!list) return <Loader />;
+	console.log("WhoToFollow Render");
 
 	return (
 		<Wrapper>

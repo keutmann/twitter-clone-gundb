@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
 import Loader from "./Loader";
 import Tweet from "./Tweet/Tweet";
@@ -12,14 +12,39 @@ const Wrapper = styled.div`
 
 const FeedList = () => {
 
-  const { feed, feedUpdated } = useUser();
+  const { feed, feedReady, setFeed, setFeedReady, messageReceived } = useUser();
 
-  if(!feed && !feedUpdated) return <Loader />;
- 
+// eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => {
+    if(!feed && feedReady.size > 0) {
+      setFeed([...feedReady.values()]); // Simply copy ready feed, more advanced sorting on date etc. may be implemented.
+      setFeedReady(new Map());
+      console.log("FeedList Initialized");
+    }
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[messageReceived]);
+
+  
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => {
+    if(feed && feedReady && feedReady.size > 0) {
+      setFeed([...feedReady.values(), ...feed]); // Simply copy ready feed, more advanced sorting on date etc. may be implemented.
+      setFeedReady(new Map());
+        console.log("FeedList setFeed");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  if(!feed) return <Loader />;
+  console.log("FeedList render");
+
   return (
     <Wrapper>
       {feed.length ? (
-          feed.map((item) => <Tweet key={item.soul} item={item} />)
+          feed.map(item => 
+            <Tweet key={item.soul} item={item} />
+          )
       ) : (
         <CustomResponse text="Follow some people to get some feed updates" />
       )}

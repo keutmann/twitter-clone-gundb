@@ -3,6 +3,7 @@ const resources = {
             names : {
                 dpeep : "dpeep",
                 profile : "profile",
+                people: "people",
                 tweets: "tweets",
                 follow : "follow",
                 trusted: "trusted",

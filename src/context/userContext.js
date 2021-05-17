@@ -7,7 +7,7 @@ import 'gun/lib/radisk';
 import 'gun/lib/store';
 import 'gun/lib/rindexed';
 import 'gun/lib/then';
-import moment from 'moment'
+import { createTweetContainer } from '../utils';
 
 import { sha256 } from '../utils/crypto';
 
@@ -31,9 +31,10 @@ const UserProvider = (props) => {
     const [users] = useState({});
 
     // The feed is global, so its available for build up in the background
-    const [feed, setFeed] = useState([]);
-    const [feedIndex, setFeedIndex] = useState({});
-    const [feedUpdated, setFeedUpdated] = useState(null);
+    const [feed, setFeed] = useState(null);
+    const [feedIndex, setFeedIndex] = useState(new Map());
+    const [feedReady, setFeedReady] = useState(new Map());
+    const [messageReceived, setMessageReceived] = useState(null);
 
 
     const login = React.useCallback(
@@ -111,18 +112,20 @@ const UserProvider = (props) => {
 
 
     const getUserContainer = React.useCallback(
-        (user) => {
+        (gunUser) => {
 
-            const pubId = (user.is) ? user.is.pub : user["_"]["soul"].substring(1);
-            const dpeepNode = user.get(resources.node.names.dpeep);
-            const profileNode = dpeepNode.get(resources.node.names.profile);
-            const tweetsNode = dpeepNode.get(resources.node.names.tweets);
-            const followsNode = dpeepNode.get(resources.node.names.follow);
+            const pubId = (gunUser.is) ? gunUser.is.pub : gunUser["_"]["soul"].substring(1);
+            const dpeep = gunUser.get(resources.node.names.dpeep);
+            const profile = dpeep.get(resources.node.names.profile);
+            const tweets = dpeep.get(resources.node.names.tweets);
+            const follow = dpeep.get(resources.node.names.follow);
+            const people = dpeep.get(resources.node.names.people);
 
-            //const tree = new DateTree(tweetsNode, 'millisecond'); // Do not work properly, events do not get fired and data not stored.
-            //const tree = tweetsNode;
+            //const tree = new DateTree(tweets, 'millisecond'); // Do not work properly, events do not get fired and data not stored.
+            //const tree = tweets;
 
-            const container = { id: pubId, gunUser: user, tweetsNode: tweetsNode, profileNode: profileNode, followsNode: followsNode };
+            const node = { user: gunUser, tweets, profile, follow, people, dpeep };
+            const container = { id: pubId, node };
             users[pubId] = Object.assign(users[pubId] || {}, container);
 
             return users[pubId];
@@ -167,64 +170,52 @@ const UserProvider = (props) => {
         async (profileData) => {
             if (!isLoggedIn) return;
 
-            user.profileNode.put(profileData);
+            user.node.profile.put(profileData);
         },
         [isLoggedIn, user]
     );
 
     const loadProfile = React.useCallback(
-        async (userNode) => {
+        async (user) => {
 
-            if (!userNode.profile) {
+            if (!user.profile) {
                 const preProfile = {
-                    handle: `${userNode.id.substring(0, 4)}...${userNode.id.substring(userNode.id.length - 4, userNode.id.length)}`,
+                    handle: `${user.id.substring(0, 4)}...${user.id.substring(user.id.length - 4, user.id.length)}`,
                     username: 'Anonymous'
                 };
 
-                const loadedProfile = await userNode.profileNode.once().then();
+                const loadedProfile = await user.node.profile.once().then() || {};
 
-                userNode.profile = Object.assign(resources.node.profile, preProfile, loadedProfile);
+                user.profile = Object.assign({}, resources.node.profile, preProfile, loadedProfile);
             }
-            return userNode.profile;
+            return user.profile;
         },
         []
     );
 
 
     // Methods ----------------------------------------------------------------------
-    const addFeed = React.useCallback((data, date, sourceUser) => {
-        const soul = Gun.node.soul(data);
-        const id = soul.split('/').pop();
-        if (feedIndex[soul]) // Do tweet already exit in feed?
-            return false; // No need re-update
+    const addFeed = React.useCallback((data, sourceUser) => {
 
-        const item = {
-            soul: soul,
-            id: id,
-            tweet: data,
-            user: sourceUser,
-            createdAt: date
-        }
+        const item = createTweetContainer(data, sourceUser);
 
-        feed.unshift(item); // Make sure not to add the same object more than once to the list.
-        feedIndex[soul] = item; // Use index, so the data only gets added to the feed once.
+        feedIndex.set(item.soul, item); // Use index, so the data only gets added to the feed once.
+        feedReady.set(item.soul, item);
+        setMessageReceived(item.soul);
         return true;
 
-    }, [feed, feedIndex]); // User here is the viewer
+    }, [feedReady, feedIndex]); // User here is the viewer
 
     const addLatestTweet = React.useCallback(async (user) => {
-        //let [latestNode, latestDate] = await user.tweetsNode.latest();
-        const latest = await user.tweetsNode.get(resources.node.names.latest).once().then();
+        const latest = await user.node.tweets.get(resources.node.names.latest).once().then();
         if (latest) {
-            const date = moment(latest.createdAt);
-            addFeed(latest, date, user);
+            addFeed(latest, user);
         }
     }, [addFeed]);
 
     const subscribeTweets = React.useCallback((user) => {
-        user.tweetsNode.get(resources.node.names.latest).on((tweet, key) => {
-            const date = moment(tweet.createdAt);
-            addFeed(tweet, date, user);
+        user.node.tweets.get(resources.node.names.latest).on((tweet, key) => {
+            addFeed(tweet, user);
         });
     }, [addFeed]);
 
@@ -235,7 +226,7 @@ const UserProvider = (props) => {
         await addLatestTweet(userContainer);
         subscribeTweets(userContainer);
 
-        const followData = await userContainer.followsNode.once().then() || {};
+        const followData = await userContainer.node.follow.once().then() || {};
 
         const addLatestTweets = Object.keys(followData).filter(key => key !== '_' && key !== userContainer.id && followData[key]).map(key => {
 
@@ -246,7 +237,7 @@ const UserProvider = (props) => {
         });
 
         await Promise.all(addLatestTweets);
-        setFeedUpdated('all');
+        //setFeedUpdated('all');
     };
 
     // UseEffects --------------------------------------------------------------------------------------------
@@ -255,7 +246,7 @@ const UserProvider = (props) => {
     useEffect(() => {
         if (!signedUp || !isLoggedIn || !user) return;
 
-        gun.get(resources.node.names.dpeep).get(resources.node.names.userIndex).get(user.id).put(user.gunUser);
+        gun.get(resources.node.names.dpeep).get(resources.node.names.userIndex).get(user.id).put(user.node.user);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [signedUp, isLoggedIn]);
@@ -280,10 +271,10 @@ const UserProvider = (props) => {
 
     const value = React.useMemo(
         () => ({
-            user, users, gun, isLoggedIn, feed, feedIndex, feedUpdated, userSignUp, loginPassword, logout, setProfile, getUserContainerById, loadProfile, followUser
+            user, users, gun, isLoggedIn, feed, feedIndex, feedReady, messageReceived, userSignUp, loginPassword, logout, setFeed, setFeedReady, setProfile, getUserContainerById, loadProfile, followUser, setMessageReceived
         }),
         [
-            user, users, gun, isLoggedIn, feed, feedIndex, feedUpdated, userSignUp, loginPassword, logout, setProfile, getUserContainerById, loadProfile, followUser
+            user, users, gun, isLoggedIn, feed, feedIndex, feedReady, messageReceived, userSignUp, loginPassword, logout, setFeed, setFeedReady, setProfile, getUserContainerById, loadProfile, followUser, setMessageReceived
         ]
     );
 

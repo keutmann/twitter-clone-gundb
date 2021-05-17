@@ -57,12 +57,12 @@ const KeyPair = () => {
   //   if(!userContainer) return;
 
   //   setUser(userContainer);
-  //   keyPair.value = JSON.stringify(userContainer.gunUser.is, null, 2);
+  //   keyPair.value = JSON.stringify(userContainer.node.user.is, null, 2);
   // },[userContainer, keyPair]);
 
   if (!user) return <Loader />;
 
-  keyPair.value = JSON.stringify(user.gunUser.is, null, 2);
+  keyPair.value = JSON.stringify(user.node.user.is, null, 2);
 
   const handleNewKeyPair = async (e) => {
     e.preventDefault();

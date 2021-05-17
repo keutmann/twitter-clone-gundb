@@ -102,7 +102,7 @@ const Nav = () => {
   const { user } = useUser();
 
   if (!user) return <Loader />;
-  const userid = user.gunUser.is.pub; 
+  const userid = user.id; 
   
   return (
     <Wrapper>

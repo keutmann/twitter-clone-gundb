@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
-import moment from "moment";
+//import moment from "moment";
 //import DeleteTweet from "./DeleteTweet";
 import LikeTweet from "./LikeTweet";
 import Retweet from "./Retweet";
@@ -9,6 +9,7 @@ import { CommentIcon } from "../Icons";
 //import TweetFile from "../../styles/TweetFile";
 import useUser from "../../hooks/useUser";
 import AvatarIdenticon from "../AvatarIdenticon";
+import { getProfileValues } from '../../utils';
 
 
 const Wrapper = styled.div`
@@ -94,7 +95,6 @@ const Wrapper = styled.div`
 const Tweet = ({ item }) => {
 
   const { loadProfile } = useUser();
-
   const [ profile, setProfile] = useState(null);
 
   useEffect(() => {
@@ -105,12 +105,11 @@ const Tweet = ({ item }) => {
         setProfile(await loadProfile(item.user));
       })();
     }
-  }, [loadProfile, setProfile, item])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item])
 
-  const userid = item.user.id;
-  const handle = (profile && profile.handle) || `${userid.substring(0,4)}...${userid.substring(userid.length - 4, userid.length)}`;
-  const displayname =(profile &&  profile.displayname) || "Anonymous";
-
+  const { userid, handle, displayname } = getProfileValues(item.user.id, profile);
+  
   return (
     <Wrapper>
       <Link to={`/${userid}`}>
@@ -122,11 +121,11 @@ const Tweet = ({ item }) => {
           <Link to={`/${userid}`}>
             <span className="username">{displayname}</span>
             <span className="secondary">{`@${handle}`}</span>
-            <span className="secondary">- {moment(item.createdAt).fromNow()}</span>
+            <span className="secondary">- {item.createdAt.fromNow()}</span>
           </Link>
         </div>
 
-        <Link to={`/${userid}/status/${item.id}`}>
+        <Link to={`/${userid}/time/${item.id}`}>
           <p>{item.tweet.text}</p>
         </Link>
 
@@ -140,7 +139,7 @@ const Tweet = ({ item }) => {
             : null}
         </div> */}
 
-        {/* <Link to={`/${handle}/status/${id}`}>
+        {/* <Link to={`/${handle}/time/${id}`}>
           {files && files.length && files[0] ? (
             <TweetFile src={files[0].url} alt="tweet-file" />
           ) : null}
@@ -149,7 +148,7 @@ const Tweet = ({ item }) => {
         <div className="tweet-stats">
           <div>
             <span className="comment">
-              <Link to={`/${userid}/status/${item.id}`}>
+              <Link to={`/${userid}/time/${item.id}`}>
                 <CommentIcon />
                 {0 ? 0 : null}
               </Link>

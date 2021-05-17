@@ -5,6 +5,8 @@ import Follow from "./Profile/Follow";
 import Button from "../styles/Button";
 import useUser from "../hooks/useUser";
 import AvatarIdenticon from "./AvatarIdenticon";
+import { getProfileValues } from '../utils';
+
 
 const UserWrapper = styled.div`
 	display: flex;
@@ -41,26 +43,26 @@ const UserWrapper = styled.div`
 
 const FollowUser = ({ id, followUser }) => {
 	const { loadProfile } = useUser();
-
 	const [ profile, setProfile ] = useState(null);
 
 	useEffect(() => {
-        if(profile) return;
         if(followUser.profile) {
             setProfile(followUser.profile);
         }
-
-        (async () => {
-            setProfile(await loadProfile(followUser));
-        })();
-    }, [profile, setProfile, followUser, loadProfile]);
+		else {
+			(async () => {
+				setProfile(await loadProfile(followUser));
+			})();
+		}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     if(!profile) return <div>Loading user...</div>;
 
-    const userid = followUser.id;
-    const handle = profile.handle;
-    const displayname =profile.displayname;
-  
+	const { userid, handle, displayname } = getProfileValues(followUser.id, profile);
+	
+	console.log("FollowUser Render");
+
     return (
 	<UserWrapper>
 		<div className="avatar-handle">

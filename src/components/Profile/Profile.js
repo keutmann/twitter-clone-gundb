@@ -25,25 +25,28 @@ const Wrapper = styled.div`
 `;
 
 const Profile = () => {
-  const { isLoggedIn, users, user, loadProfile } = useUser();
+  const { isLoggedIn, user, loadProfile, getUserContainerById } = useUser();
   const { handle } = useParams(); 
   const [ profile, setProfile] = useState(null);
 
-  console.log("Profile handle: "+handle)
-
+  
   useEffect(() => {
-    const viewedUser = users[handle];
+    const viewedUser = getUserContainerById(handle);
     if(!viewedUser) return;
+
     (async ()=>{
       setProfile(await loadProfile(viewedUser));
     })();
-  }, [loadProfile, users, user, handle])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handle])
 
   if (!profile) {
     return <Loader />;
   }
 
-  const isSelf = (isLoggedIn) ? handle === user.gunUser.is.pub : false;
+  const isSelf = (isLoggedIn) ? handle === user.id : false;
+
+  console.log("Profile Render")
 
   return (
     <Wrapper>
