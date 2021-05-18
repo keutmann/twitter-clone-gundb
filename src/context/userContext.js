@@ -251,6 +251,7 @@ const UserProvider = (props) => {
 
     const resetFeedReady = React.useCallback(() => {
         Object.keys(feedReady).forEach(p=> delete feedReady[p]);
+        setMessageReceived(null);
     }, [feedReady]);
 
 
@@ -268,6 +269,22 @@ const UserProvider = (props) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [setIsLoggedIn, setGunUser, getUserContainer, loadProfile, setUser, initializeFeed ]);
 
+
+    const loadFeed = React.useCallback(() => {
+        let temp = feed || [];
+  
+        const items = Object.values(feedReady);
+        if(items.length > 0) {
+          setFeed([...items, ...temp]); // Simply copy ready feed, more advanced sorting on date etc. may be implemented.
+          resetFeedReady();
+          return true;
+        }
+  
+        if(feed)  // No new messages but we have a feed already
+          return true;
+  
+        return false;
+    }, [feed, feedReady, setFeed, resetFeedReady]);
 
     // UseEffects --------------------------------------------------------------------------------------------
 
@@ -312,10 +329,10 @@ const UserProvider = (props) => {
 
     const value = React.useMemo(
         () => ({
-            user, users, gun, isLoggedIn, feed, feedIndex, feedReady, messageReceived, userSignUp, loginPassword, logout, setFeed, setProfile, getUserContainerById, loadProfile, followUser, setMessageReceived, resetFeedReady
+            user, users, gun, isLoggedIn, feed, feedIndex, feedReady, messageReceived, userSignUp, loginPassword, logout, setFeed, setProfile, getUserContainerById, loadProfile, followUser, setMessageReceived, resetFeedReady, loadFeed
         }),
         [
-            user, users, gun, isLoggedIn, feed, feedIndex, feedReady, messageReceived, userSignUp, loginPassword, logout, setFeed, setProfile, getUserContainerById, loadProfile, followUser, setMessageReceived, resetFeedReady
+            user, users, gun, isLoggedIn, feed, feedIndex, feedReady, messageReceived, userSignUp, loginPassword, logout, setFeed, setProfile, getUserContainerById, loadProfile, followUser, setMessageReceived, resetFeedReady, loadFeed
         ]
     );
 

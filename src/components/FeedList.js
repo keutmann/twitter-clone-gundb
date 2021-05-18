@@ -12,20 +12,7 @@ const Wrapper = styled.div`
 
 const FeedList = () => {
 
-  const { feed, feedReady, setFeed, resetFeedReady } = useUser(); // messageReceived
-  //const [ items, setItems ] = useState();
-
-// eslint-disable-next-line react-hooks/rules-of-hooks
-  // useEffect(() => {
-  //   const items = Object.values(feedReady);
-  //   if(!feed) {
-  //     setFeed([...items]); // Simply copy ready feed, more advanced sorting on date etc. may be implemented.
-  //     resetFeedReady();
-  //     console.log("FeedList Initialized");
-  //   } 
-  // // eslint-disable-next-line react-hooks/exhaustive-deps
-  // },[messageReceived]);
-
+  const { feed, feedReady, setFeed, resetFeedReady } = useUser(); 
 
   // Events
   // Page load, effect run

@@ -1,7 +1,7 @@
 import React from "react";
 import styled, { css } from "styled-components";
 
-const Wrapper = styled.div`
+export const Wrapper = styled.div`
   width: 315px;
   background: ${(props) => props.theme.tertiaryColor2};
   padding: 0.2rem 0.4rem;
@@ -23,6 +23,7 @@ const Wrapper = styled.div`
   label {
     color: ${(props) => props.theme.secondaryColor};
     margin-bottom: 2px;
+    width: 100%;
   }
 
   ${(props) =>

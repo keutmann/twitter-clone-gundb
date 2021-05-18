@@ -27,22 +27,24 @@ const Wrapper = styled.div`
 const Profile = () => {
   const { isLoggedIn, user, loadProfile, getUserContainerById } = useUser();
   const { handle } = useParams(); 
+  const [ viewedUser, setViewedUser] = useState(null);
   const [ profile, setProfile] = useState(null);
 
   
   useEffect(() => {
-    const viewedUser = getUserContainerById(handle);
-    if(!viewedUser) return;
+    const userContainer = getUserContainerById(handle);
+    if(!userContainer) return;
+    setViewedUser(userContainer);
 
     (async ()=>{
-      setProfile(await loadProfile(viewedUser));
+      setProfile(await loadProfile(userContainer));
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handle])
 
-  if (!profile) {
+  if (!profile) 
     return <Loader />;
-  }
+  
 
   const isSelf = (isLoggedIn) ? handle === user.id : false;
 
@@ -60,7 +62,7 @@ const Profile = () => {
           </span> */}
         </div>
       </Header>
-      <ProfileInfo profile={profile} isSelf={isSelf} />
+      <ProfileInfo userid={viewedUser.id} profile={profile} isSelf={isSelf} />
       {/* {profile && profile.tweets && profile.tweets.length
         ? profile.tweets.map((tweet) => (
             <Tweet key={tweet.id} tweet={tweet} />

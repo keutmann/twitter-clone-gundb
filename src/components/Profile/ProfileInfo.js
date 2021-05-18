@@ -2,11 +2,11 @@ import React from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import CoverPhoto from "../../styles/CoverPhoto";
-import Avatar from "../../styles/Avatar";
 import Button from "../../styles/Button";
 import Follow from "./Follow";
 import { DobIcon, LocationIcon, LinkIcon } from "../Icons";
 import CustomResponse from "../CustomResponse";
+import AvatarIdenticon from "../AvatarIdenticon";
 
 const Wrapper = styled.div`
   border-bottom: 1px solid ${(props) => props.theme.tertiaryColor};
@@ -77,7 +77,7 @@ const Wrapper = styled.div`
   }
 `;
 
-const ProfileInfo = ({ profile, isSelf }) => {
+const ProfileInfo = ({ userid, profile, isSelf }) => {
   if (!profile) {
     return (
       <CustomResponse text="Oops, you are trying to visit a profile which seems to be doesn't exist. Make sure the profile handle exists" />
@@ -87,7 +87,6 @@ const ProfileInfo = ({ profile, isSelf }) => {
   const {
     id,
     coverPhoto,
-    avatar,
     bio,
     location,
     website,
@@ -99,10 +98,13 @@ const ProfileInfo = ({ profile, isSelf }) => {
     displayname,
   } = profile;
 
+  
   return (
     <Wrapper>
-      <CoverPhoto src={coverPhoto} alt="cover" />
-      <Avatar className="avatar" lg src={avatar} alt="profile" />
+      <CoverPhoto src={coverPhoto || '/tropical_paradise_204378.jpg'} alt="cover" />
+      <div className="avatar">
+        <AvatarIdenticon id={userid} profile={profile} />
+      </div>
 
       {isSelf ? (
         <Link to="/settings/profile">

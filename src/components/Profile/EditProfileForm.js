@@ -3,12 +3,12 @@ import TextareaAutosize from "react-textarea-autosize";
 import { withRouter } from "react-router-dom";
 import { toast } from "react-toastify";
 import useInput from "../../hooks/useInput";
-import Input from "../Input";
+import Input, { Wrapper } from "../Input";
 import Button from "../../styles/Button";
 import Form from "../../styles/Form";
 import { displayError } from "../../utils";
 import CoverPhoto from "../../styles/CoverPhoto";
-import Avatar from "../../styles/Avatar";
+import AvatarIdenticon from "../AvatarIdenticon";
 import { uploadImage } from "../../utils";
 import useUser from "../../hooks/useUser";
 
@@ -21,16 +21,14 @@ const EditProfileForm = ({ history }) => {
   const [coverPhotoState, setCoverPhoto] = useState("");
 
   const profile = user.profile;
-  const loading = !profile; // The profile object has not been loaded yet.
 
-
-  const displayname = useInput(profile && profile.displayname);
-  const location = useInput(profile && profile.location);
-  const website = useInput(profile && profile.website);
-  const dob = useInput(profile && profile.dob);
-  const avatar = useInput(profile && profile.avatar);
-  const bio = useInput(profile && profile.bio);
-  const coverPhoto = useInput(profile && profile.coverPhoto);
+  const displayname = useInput(profile.displayname);
+  //const location = useInput(profile && profile.location);
+  const website = useInput(profile.website);
+  //const dob = useInput(profile && profile.dob);
+  const avatar = useInput(profile.avatar);
+  const bio = useInput(profile.bio);
+  const coverPhoto = useInput(profile.coverPhoto || '/tropical_paradise_204378.jpg');
 
   const handle = user.id;
 
@@ -41,9 +39,9 @@ const EditProfileForm = ({ history }) => {
     try {
       let formData ={
           displayname: displayname.value,
-          dob: dob.value,
+          //dob: dob.value,
           bio: bio.value,
-          location: location.value,
+          //location: location.value,
           website: website.value,
           avatar: avatarState ? avatarState : avatar.value,
           coverPhoto: coverPhotoState ? coverPhotoState : coverPhoto.value
@@ -60,8 +58,8 @@ const EditProfileForm = ({ history }) => {
 
     [
       displayname,
-      dob,
-      location,
+      // dob,
+      // location,
       website,
       avatar,
       coverPhoto,
@@ -80,7 +78,8 @@ const EditProfileForm = ({ history }) => {
 
   return (
     <Form lg onSubmit={handleEditProfile}>
-      <div className="cover-photo">
+      <Wrapper>
+        <label>Cover Photo</label>
         <label htmlFor="cover-photo-input">
           <CoverPhoto
             src={coverPhotoState ? coverPhotoState : coverPhoto.value}
@@ -88,18 +87,20 @@ const EditProfileForm = ({ history }) => {
           />
         </label>
         <input type="file" id="cover-photo-input" accept="image/*" onChange={handleCoverPhoto} />
-      </div>
+      </Wrapper>
 
-      <div className="avatar-input">
+      <Wrapper>
+        <label>Avatar Photo</label>
         <label htmlFor="avatar-input-file">
-          <Avatar
+          <AvatarIdenticon id={handle} profile={profile} />
+          {/* <Avatar
             lg
             src={avatarState ? avatarState : avatar.value}
             alt="avatar"
-          />
+          /> */}
         </label>
         <input type="file" accept="image/*" id="avatar-input-file" onChange={handleAvatar} />
-      </div>
+      </Wrapper>
 
       <Input
         lg={true}
@@ -113,7 +114,7 @@ const EditProfileForm = ({ history }) => {
         </label>
         <TextareaAutosize
           id="bio"
-          placeholder="Bio"
+          placeholder="Write your bio here..."
           value={bio.value}
           onChange={bio.onChange}
         />
@@ -124,21 +125,19 @@ const EditProfileForm = ({ history }) => {
         value={website.value}
         onChange={website.onChange}
       />
-      <Input
+      {/* <Input
         lg={true}
         text="Date of Birth"
         value={dob.value}
         onChange={dob.onChange}
-      />
-      <Input
+      /> */}
+      {/* <Input
         lg={true}
         text="Location"
         value={location.value}
         onChange={location.onChange}
-      />
-      <Button outline disabled={loading} type="submit">
-        {loading ? "Saving" : "Save"}
-      </Button>
+      /> */}
+      <Button outline type="submit">Save</Button>
     </Form>
   );
 };
