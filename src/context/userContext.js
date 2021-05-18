@@ -110,12 +110,25 @@ const UserProvider = (props) => {
             const profile = dpeep.get(resources.node.names.profile);
             const tweets = dpeep.get(resources.node.names.tweets);
             const follow = dpeep.get(resources.node.names.follow);
-            const people = dpeep.get(resources.node.names.people);
+            
+            // Options
+            // ---------------
+            // Trust- x levels
+            //  - Users
+            //  - Tweets
+            //  - Comments
+            // Distrust
+            //  - (Repeat categories.. etc )
+            // Confirm
+            //  - (Repeat categories.. etc )
+            // Follow - x levels Users only
+            // Block - single
+            // Mute - single
 
             //const tree = new DateTree(tweets, 'millisecond'); // Do not work properly, events do not get fired and data not stored.
             //const tree = tweets;
 
-            const node = { user: gunUser, tweets, profile, follow, people, dpeep };
+            const node = { user: gunUser, tweets, profile, follow, dpeep };
             const container = { id: pubId, node };
             users[pubId] = Object.assign({}, users[pubId], container);
 

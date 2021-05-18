@@ -15,3 +15,14 @@ npm install git+https://github.com/gundb/gun.git
 
 npm audit fix --force
 
+
+
+# Run
+
+npm start
+
+#Gun 
+
+cd node_modules
+cd gun
+npm start
