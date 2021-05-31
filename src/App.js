@@ -7,6 +7,7 @@ import { ThemeContext } from "./context/ThemeContext";
 import Router from "./Route";
 import Auth from "./components/Auth/Auth";
 import useUser from './hooks/useUser';
+//import 'bootstrap/dist/css/bootstrap.min.css';
 
 
 const App = () => {

@@ -13,7 +13,7 @@ import AddComment from "../Comment/AddComment";
 import useUser  from '../../hooks/useUser';
 //import Gun from 'gun';
 import resources from "../../utils/resources";
-import { createTweetContainer } from '../../utils';
+//import { createContainer } from '../../utils';
 
 const Wrapper = styled.div`
   margin-bottom: 7rem;
@@ -21,7 +21,7 @@ const Wrapper = styled.div`
 
 const MasterTweet = () => {
   const { handle, tweetId } = useParams();
-  const { getUserContainerById } = useUser();
+  const { getUserContainerById, createContainer } = useUser();
 
 
 
@@ -34,8 +34,9 @@ const MasterTweet = () => {
     (async() => {
       const userContainer = getUserContainerById(handle);
       const tweetNode = userContainer.node.tweets.get(tweetId);
+
       const tweet = await tweetNode.once(p=>p, {wait:0}).then();
-      const item = createTweetContainer(tweet, userContainer);
+      const item = createContainer(tweet);
       
       setTweetContainer(item);
 
@@ -46,7 +47,7 @@ const MasterTweet = () => {
     })();
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handle, tweetId]);
+  }, [handle, tweetId, createContainer]);
 
 
   // const comments =

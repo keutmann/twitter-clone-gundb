@@ -5,6 +5,7 @@ import moment from "moment";
 import Avatar from "../../styles/Avatar";
 import DeleteComment from "./DeleteComment";
 import useUser  from '../../hooks/useUser';
+import Confirm from "../Message/Confirm";
 //import Gun from 'gun';
 //import resources from "../../utils/resources";
 
@@ -87,6 +88,10 @@ const Comment = ({ item }) => {
 
         <p>{text}</p>
       </div>
+      <div>
+          <Confirm id={item.id} isConfirmed={item.confirmed || false} confirmCount={0} />
+      </div>
+
     </Wrapper>
   );
 };

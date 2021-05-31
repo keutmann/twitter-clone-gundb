@@ -5,28 +5,22 @@ import { toast } from "react-toastify";
 // import { DELETE_TWEET } from "../../queries/tweet";
 import { TrashIcon } from "../Icons";
 
-const DeleteTweet = ({ id }) => {
-  const loading = true;
-
-  // const [deleteTweetMutation, { loading }] = useMutation(DELETE_TWEET, {
-  //   variables: { id },
-  //   update: (cache, { data: { deleteTweet } }) => {
-  //     const { feed } = cache.readQuery({ query: FEED });
-  //     cache.writeQuery({
-  //       query: FEED,
-  //       data: {
-  //         feed: feed.filter((tweet) => tweet.id !== deleteTweet.id),
-  //       },
-  //     });
-  //   },
-  // });
+const DeleteTweet = ({ item }) => {
 
   const handleDeleteTweet = async () => {
+
+    //this.tweets.get(resources.node.names.delete).put(soul);
+
+    // Some things to consider,
+    // Update latest
+    // There is no "on" event on tweets for other users.
+    //item.getNode().put(null); 
+
     //await deleteTweetMutation();
     toast.success("Your tweet has been deleted");
   };
 
-  return <TrashIcon loading={loading} onClick={handleDeleteTweet} />;
+  return <TrashIcon loading={false} onClick={handleDeleteTweet} />;
 };
 
 export default DeleteTweet;

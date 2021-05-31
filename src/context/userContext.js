@@ -7,7 +7,11 @@ import sea from 'gun/sea';
 // import 'gun/lib/store';
 // import 'gun/lib/rindexed';
 import 'gun/lib/then';
-import { createTweetContainer } from '../utils';
+// import Rad from 'gun/lib/radisk'; 
+// import Radix from 'gun/lib/radix'; 
+
+//import { createTweetContainer } from '../utils';
+import { DateTree } from 'gun-util';
 
 import { sha256 } from '../utils/crypto';
 
@@ -23,7 +27,29 @@ UserContext.displayName = 'userContext';
 
 const UserProvider = (props) => {
 
-    const [gun] = useState(Gun({ peers: serverpeers })); //{ peers: serverpeers, localStorage: false }{peers: ["http://server-ip-or-hostname:8080/gun"]}
+    Gun.on('opt', function (context) {
+        if (context.once) 
+            return
+        
+        // Pass to subsequent opt handlers
+        this.to.next(context)
+      
+        const { isValid } = context.opt
+      
+        if (isValid) {
+            // Check all incoming traffic
+            context.on('in', function (msg) {
+                if (msg.put && !isValid(msg)) 
+                    return;
+
+                this.to.next(msg)
+            })
+        }
+      });
+
+      
+
+    const [gun] = useState(Gun({ peers: serverpeers, isValid: isValidUser })); //{ peers: serverpeers, localStorage: false }{peers: ["http://server-ip-or-hostname:8080/gun"]}
     const [gunUser, setGunUser] = useState(null);
     const [isLoggedIn, setIsLoggedIn] = useState(null);
 
@@ -31,6 +57,7 @@ const UserProvider = (props) => {
     const [signedUp, setSignedUp] = useState(false);
     const [user, setUser] = useState(null);
     const [users] = useState({});
+    const [usersBan] = useState({}); // An index of users that are banned to access the local database, avoiding unwanted content.
 
     // The feed is global, so its available for build up in the background
     const [feed, setFeed] = useState(null);
@@ -38,6 +65,28 @@ const UserProvider = (props) => {
     const [feedReady] = useState({});
     const [messageReceived, setMessageReceived] = useState(null);
 
+
+    // Verify that a user is not banned from adding data into local database.
+    function isValidUser(msg) {
+        let userId = Object.keys(msg.put).filter(k => k[0] === '~').map(k => k.split('/').shift()).shift();
+        if(userId && usersBan[userId])
+            return false;
+
+        return true;
+    }
+
+    // // Clear out the content from a user in the local Database, avoiding unwanted content.
+    // const removeUserFromLocalDB = React.useCallback(
+    //     async (userId) => {
+    //         var rad = Rad();
+    //         rad(userId, function(err, tree, info){
+    //           Radix.map(tree, function(value, key){
+    //             rad(key, null);
+    //           });
+    //         });
+    //     },
+    //     []
+    // );
 
     const login = React.useCallback(
         async (keys) => {
@@ -105,12 +154,13 @@ const UserProvider = (props) => {
     const getUserContainer = React.useCallback(
         (gunUser) => {
 
-            const pubId = (gunUser.is) ? gunUser.is.pub : gunUser["_"]["soul"].substring(1);
+            const pubId = (gunUser.is) ? '~'+gunUser.is.pub : gunUser["_"]["soul"];
             const dpeep = gunUser.get(resources.node.names.dpeep);
             const profile = dpeep.get(resources.node.names.profile);
             const tweets = dpeep.get(resources.node.names.tweets);
             const follow = dpeep.get(resources.node.names.follow);
-            
+            const trust = dpeep.get(resources.node.names.trust);
+            const confirm  = dpeep.get(resources.node.names.confirm);
             // Options
             // ---------------
             // Trust- x levels
@@ -121,33 +171,69 @@ const UserProvider = (props) => {
             //  - (Repeat categories.. etc )
             // Confirm
             //  - (Repeat categories.. etc )
+            // Reject
             // Follow - x levels Users only
             // Block - single
             // Mute - single
 
-            //const tree = new DateTree(tweets, 'millisecond'); // Do not work properly, events do not get fired and data not stored.
-            //const tree = tweets;
-
-            const node = { user: gunUser, tweets, profile, follow, dpeep };
-            const container = { id: pubId, node };
+            //const treeRoot = tweets.get('treeRoot');
+            const tree = new DateTree(tweets, 'millisecond'); // Do not work properly, events do not get fired and data not stored.
+            
+            const node = { 
+                user: gunUser, 
+                tweets, 
+                tree,
+                profile, 
+                follow, 
+                dpeep,
+                trust,
+                confirm,
+             };
+            const container = { id: pubId, node, trust: {}, distrust: {}, confirm: {}, reject: {} };
             users[pubId] = Object.assign({}, users[pubId], container);
 
             return users[pubId];
         },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [users]
     );
 
     const getUserContainerById = React.useCallback(
         (pubId) => {
-            const container = users[pubId]; // Just return an exiting container is exist
-            if (container) return container;
+            const user = users[pubId]; 
+            if (user && user.node) return user; // Just return an exiting container is exist and node is set
 
-            const user = gun.user(pubId);
+            const gunUser = gun.user(pubId);
 
-            return getUserContainer(user); // Create a new one
+            return getUserContainer(gunUser); // Create a new one
         },
         [gun, users, getUserContainer]
     );
+
+    const createContainer =  React.useCallback( (data) => {
+        const soul = Gun.node.soul(data);
+        const soulElem = soul.split('/');
+
+        const userId = soulElem.shift();
+        soulElem.shift(); // Just shift to next element
+        const category = soulElem.shift();
+        const itemId = soulElem.join('');
+
+        const ownerContainer = getUserContainerById(userId);
+
+        const item = {
+            soul: soul,
+            id: itemId,
+            category: category,
+            data: data,
+            owner: ownerContainer,
+            confirmedBy: {}
+        }
+        return item;
+        },
+        [getUserContainerById]
+    );
+    
 
     const userSignUp = React.useCallback(
         async (signedUpData) => {
@@ -202,9 +288,11 @@ const UserProvider = (props) => {
 
 
     // Methods ----------------------------------------------------------------------
-    const addFeed = React.useCallback((data, sourceUser) => {
+    const addFeed = React.useCallback((data, key) => {
+        if(!data) // Data is null, we need to remove it from feed!? But what id?
+            return;
 
-        const item = createTweetContainer(data, sourceUser);
+        const item = createContainer(data);
         if(feedIndex[item.soul])
             return true;
 
@@ -213,41 +301,107 @@ const UserProvider = (props) => {
         setMessageReceived(item.soul);
         return true;
 
+    }, [createContainer, feedIndex, feedReady]); // User here is the viewer
+
+    const removeFromFeed = React.useCallback((soul, key) => {
+        if(!soul) // Data is null, we need to remove it from feed!? But what id?
+            return false;
+
+        if(!feedIndex[soul])
+            return false;
+
+        delete feedIndex[soul];
+        delete feedReady[soul];
+        setMessageReceived(soul);
+
+        return true;
+
     }, [feedReady, feedIndex]); // User here is the viewer
 
-    const addLatestTweet = React.useCallback(async (user) => {
-        const latest = await user.node.tweets.get(resources.node.names.latest).once(p=>p, {wait:0}).then();
-        if (latest) {
-            addFeed(latest, user);
+
+    const initializeFeed = (userContainer) => {
+        console.log("Subscribing to users feed - GUN Style");
+        const userFound = {}; // Make sure only to process the user once.
+
+        function loadFeed(currentUser, currentLevel) 
+        {
+            userFound[currentUser.id] = true;
+
+            currentUser.node.tweets.get(resources.node.names.latest).on(addFeed);
+            currentUser.node.tweets.get(resources.node.names.delete).on(removeFromFeed);
+
+            if(--currentLevel < 0)
+                return;  
+
+            currentUser.node.follow.map().on((value, key) => {
+                if(key && userFound[key])
+                    return; // Do not process the same user twice.
+
+                // Use value.level to check if follow should be done. Advanced version.
+
+                const followUser = getUserContainerById(key);
+                loadFeed(followUser, currentLevel);
+            });
         }
-    }, [addFeed]);
 
-    const subscribeTweets = React.useCallback((user) => {
-        user.node.tweets.get(resources.node.names.latest).on((tweet, key) => {
-            addFeed(tweet, user);
-        });
-    }, [addFeed]);
-
-
-    // Build up users collection, needs refactoring, as it gets called multiple times.
-    const initializeFeed = async (userContainer) => {
-        console.log("Subscribing to users feed");
-        await addLatestTweet(userContainer);
-        subscribeTweets(userContainer);
-
-        const followData = await userContainer.node.follow.once(p=>p, {wait:0}).then() || {};
-
-        const addLatestTweets = Object.keys(followData).filter(key => key !== '_' && key !== userContainer.id && followData[key]).map(key => {
-
-            const followUser = getUserContainerById(key);
-
-            subscribeTweets(followUser);
-            return addLatestTweet(followUser);
-        });
-
-        await Promise.all(addLatestTweets);
-        //setFeedUpdated('all');
+        loadFeed(userContainer, 1); // Follow max one level out
     };
+
+    function initializeTrust(userContainer, maxlevel = 1) {
+        console.log(`Subscribing to users Trust - GUN Style`);
+        const userFound = {}; // Make sure only to process the user once.
+
+        const getUser = (key) => users[key] ||  
+        (user[key] = Object.assign({}, users[key], 
+            { id: key, trust: {}, trustedBy: {}, confirm: {}, confirmedBy: {} }));
+        
+        const getItem = (key) => feedIndex[key] || (feedIndex[key] = { confirmedBy: {} });
+
+        function load(currentUser, currentLevel) 
+        {
+            userFound[currentUser.id] = true;
+            
+            if(--currentLevel < 0)
+                return;  
+            
+            if(!currentUser.node)
+                currentUser = getUserContainerById(currentUser.id);
+
+            currentUser.node.trust.map().on((data, key) => {
+                const localUser = getUser(key);
+                localUser.trustedBy[currentUser.id] = data;
+                //localUser.trustCount = (localUser.trustCount) ? localUser.trustCount + 1 : 1;
+                //currentUser.trust[key] = localUser; // Do we need this one?
+
+                if(!userFound[key])
+                    load(localUser, currentLevel);
+            });
+
+            // currentUser.node.distrust.map().on((value, key) => {
+            //     const localUser = getUser(key);
+            //     localUser.distrustCount = (localUser.distrustCount) ? localUser.distrustCount + 1 : 1;
+            //     currentUser.distrust[key] = localUser;
+
+            //     if(!userFound[key])
+            //         load(localUser, currentLevel);
+            // });
+
+            currentUser.node.confirm.map().on((data, soul) => {
+                const item = getItem(soul);
+                item.confirmedBy[currentUser.id] = data;
+                //currentUser.confirm[soul] = item;
+            });
+
+            // currentUser.node.reject.map().on((value, soul) => {
+            //     const item = getItem(soul);
+            //     item.rejectCount = (item.rejectCount) ? item.rejectCount + 1 : 1;
+            //     currentUser.reject[soul] = item;
+            // });
+        }
+
+        load(userContainer, maxlevel); // Follow max one level out
+    }
+
 
     const resetFeedReady = React.useCallback(() => {
         Object.keys(feedReady).forEach(p=> delete feedReady[p]);
@@ -266,6 +420,7 @@ const UserProvider = (props) => {
         loadProfile(userContainer);
         setUser(userContainer);
         initializeFeed(userContainer);
+        initializeTrust(userContainer);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [setIsLoggedIn, setGunUser, getUserContainer, loadProfile, setUser, initializeFeed ]);
 
@@ -329,10 +484,16 @@ const UserProvider = (props) => {
 
     const value = React.useMemo(
         () => ({
-            user, users, gun, isLoggedIn, feed, feedIndex, feedReady, messageReceived, userSignUp, loginPassword, logout, setFeed, setProfile, getUserContainerById, loadProfile, followUser, setMessageReceived, resetFeedReady, loadFeed
+            user, users, gun, isLoggedIn, feed, feedIndex, feedReady, messageReceived, userSignUp, loginPassword, 
+            logout, setFeed, setProfile, getUserContainerById,
+            loadProfile, followUser, setMessageReceived, resetFeedReady, loadFeed,
+            createContainer
         }),
         [
-            user, users, gun, isLoggedIn, feed, feedIndex, feedReady, messageReceived, userSignUp, loginPassword, logout, setFeed, setProfile, getUserContainerById, loadProfile, followUser, setMessageReceived, resetFeedReady, loadFeed
+            user, users, gun, isLoggedIn, feed, feedIndex, feedReady, messageReceived, 
+            userSignUp, loginPassword, logout, setFeed, setProfile, getUserContainerById, 
+            loadProfile, followUser, setMessageReceived, resetFeedReady, loadFeed,
+            createContainer
         ]
     );
 

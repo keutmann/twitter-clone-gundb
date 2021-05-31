@@ -11,7 +11,7 @@ import AvatarIdenticon from "../AvatarIdenticon";
 import { uploadImage } from "../../utils";
 import Loader from "../Loader";
 import useUser  from '../../hooks/useUser';
-import moment from 'moment'
+//import moment from 'moment'
 import resources from '../../utils/resources';
 
 
@@ -62,22 +62,27 @@ const NewTweet = () => {
   // Create a tweet on Gun
   const createTweet = async (tweet) => {
     // Timestamp the tweet automatically, this will enable time search on the users Tweets node.
-    const tweetId = moment().toISOString();
+    const date = new Date();
+    //const tweetId = moment().toISOString();
+    const tweetId = date.toISOString();
+
     tweet.createdAt = tweetId;
 
-    const tweetNode = user.node.tweets.get(tweetId);
+    const tweetNode = user.node.tree.get(date);
     const tweetData = await tweetNode.put(tweet);
 
     // Chain up tweets
-    const previousTweetData = await user.node.tweets.get(resources.node.names.latest).once(p=>p, {wait:0}).then();
-    if(previousTweetData)
-        tweetNode.get('next').put(previousTweetData);
+    const previousTweetNode = user.node.tweets.get(resources.node.names.latest);
+    previousTweetNode.once((value, key) => {
+        tweetNode.get(resources.node.names.next).put(value);
+        //previousTweetNode.get('previous').put(tweetNode); // Maybe TweetData !?        
+    });
 
-    user.node.tweets.get('latest').put(tweetData);
+    user.node.tweets.get(resources.node.names.latest).put(tweetData);
 
     // Add comments object from the Gun root, as this is writeable for everone.
     const commentsID = user.id+tweetId;
-    const commentsData = await gun.get(resources.node.names.dpeep).get(resources.node.names.comments).get(commentsID).put({}).once(p=>p, {wait:0}).then();
+    const commentsData = await gun.get(resources.node.names.dpeep).get(resources.node.names.comments).get(user.id).get(commentsID).put({}).once(p=>p, {wait:0}).then();
     tweetNode.get(resources.node.names.comments).put(commentsData);
   }
 

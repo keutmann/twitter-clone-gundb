@@ -1,10 +1,13 @@
-import Gun from 'gun/gun';
+//import Gun from 'gun/gun';
 import axios from "axios";
 import { toast } from "react-toastify";
-import moment from 'moment'
+//import moment from 'moment'
 
-export const displayError = (err) =>
-  toast.error(err.message.split(":")[1].trim().replace(".", ""));
+export const displayError = (err) => {
+toast.error(err.message);
+console.log(err.stack);
+}
+  //toast.error(err.message.split(":")[1].trim().replace(".", ""));
 
 export const sortFn = (a, b) => {
   var dateA = new Date(a.createdAt).getTime();
@@ -48,21 +51,27 @@ export const instantiateNewGun = (Gun, opts) => () => {
 };
 
 
-export const createTweetContainer = (tweet, userContainer) => {
-  const soul = Gun.node.soul(tweet);
-  const id = soul.split('/').pop();
-  const date = moment(tweet.createdAt);
 
 
-  const item = {
-      soul: soul,
-      id: id,
-      tweet: tweet,
-      user: userContainer,
-      createdAt: date
-  }
-  return item;
-};
+// export const createTweetContainer = (tweet, userContainer) => {
+//   const soul = Gun.node.soul(tweet);
+//   const id = soul.split('/').pop();
+//   const date = moment(tweet.createdAt);
+
+
+//   const item = {
+//       soul: soul,
+//       id: id,
+//       tweet: tweet,
+//       user: userContainer,
+//       createdAt: date,
+
+//       getNode : function() {
+//         return userContainer.tweets.get(this.id);
+//       }
+//   }
+//   return item;
+// };
 
 export const getProfileValues = (userid, profile) => {
   const handle = (profile && profile.handle) || `${userid.substring(0,4)}...${userid.substring(userid.length - 4, userid.length)}`;

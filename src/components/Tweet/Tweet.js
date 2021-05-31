@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
-//import moment from "moment";
-//import DeleteTweet from "./DeleteTweet";
-import LikeTweet from "./LikeTweet";
+import moment from "moment";
+import DeleteTweet from "./DeleteTweet";
+import ConfirmReject from "../Message/ConfirmReject";
 import Retweet from "./Retweet";
 import { CommentIcon } from "../Icons";
 //import TweetFile from "../../styles/TweetFile";
 import useUser from "../../hooks/useUser";
 import AvatarIdenticon from "../AvatarIdenticon";
 import { getProfileValues } from '../../utils';
+import TweetMenu from './TweetMenu'
+// import DropdownButton from 'react-bootstrap/DropdownButton'
+// import Dropdown from 'react-bootstrap/Dropdown'
 
 
 const Wrapper = styled.div`
@@ -29,6 +32,11 @@ const Wrapper = styled.div`
     padding-left: 0.5rem;
     color: ${(props) => props.theme.secondaryColor};
   }
+
+  .tweet-info-user div.menu {
+    align-items: right;
+  }
+
 
   .tags {
     display: flex;
@@ -98,17 +106,17 @@ const Tweet = ({ item }) => {
   const [ profile, setProfile] = useState(null);
 
   useEffect(() => {
-    if (item.user.profile) {
-      setProfile(item.user.profile);
+    if (item.owner.profile) {
+      setProfile(item.owner.profile);
     } else {
       (async ()=>{
-        setProfile(await loadProfile(item.user));
+        setProfile(await loadProfile(item.owner));
       })();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item])
 
-  const { userid, handle, displayname } = getProfileValues(item.user.id, profile);
+  const { userid, handle, displayname } = getProfileValues(item.owner.id, profile);
   
   return (
     <Wrapper>
@@ -121,12 +129,15 @@ const Tweet = ({ item }) => {
           <Link to={`/${userid}`}>
             <span className="username">{displayname}</span>
             <span className="secondary">{`@${handle}`}</span>
-            <span className="secondary">- {item.createdAt.fromNow()}</span>
+            <span className="secondary">- {moment(item.data.createdAt).fromNow()}</span>
           </Link>
+          <div className="menu">
+            <TweetMenu item={item}></TweetMenu>
+          </div>
         </div>
 
         <Link to={`/${userid}/time/${item.id}`}>
-          <p>{item.tweet.text}</p>
+          <p>{item.data.text}</p>
         </Link>
 
         {/* <div className="tags">
@@ -164,12 +175,12 @@ const Tweet = ({ item }) => {
           </div>
 
           <div>
-            <LikeTweet id={item.id} isLiked={false} likesCount={0} />
+            <ConfirmReject id={item.id} item={item} />
           </div>
 
-          {/* <div>
-            <span>{isTweetMine ? <DeleteTweet id={id} /> : null}</span>
-          </div> */}
+          <div>
+            <span>{true ? <DeleteTweet item={item} /> : null}</span>
+          </div>
         </div>
       </div>
     </Wrapper>
