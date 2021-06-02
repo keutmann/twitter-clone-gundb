@@ -77,7 +77,7 @@ const Wrapper = styled.div`
   }
 `;
 
-const ProfileInfo = ({ userid, profile, isSelf }) => {
+const ProfileInfo = ({ user, profile, isSelf }) => {
   if (!profile) {
     return (
       <CustomResponse text="Oops, you are trying to visit a profile which seems to be doesn't exist. Make sure the profile handle exists" />
@@ -103,7 +103,7 @@ const ProfileInfo = ({ userid, profile, isSelf }) => {
     <Wrapper>
       <CoverPhoto src={coverPhoto || '/tropical_paradise_204378.jpg'} alt="cover" />
       <div className="avatar">
-        <AvatarIdenticon id={userid} profile={profile} />
+        <AvatarIdenticon id={user.id} profile={profile} />
       </div>
 
       {isSelf ? (
@@ -116,7 +116,7 @@ const ProfileInfo = ({ userid, profile, isSelf }) => {
         <Follow
           relative
           className="action-btn"
-          isFollowing={isFollowing}
+          user={isFollowing}
           id={id}
         />
       )}

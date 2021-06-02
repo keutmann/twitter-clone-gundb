@@ -3,10 +3,8 @@ import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import Header from "../Header";
 import ProfileInfo from "./ProfileInfo";
-//import Tweet from "../Tweet/Tweet";
 import Loader from "../Loader";
 import useUser from "../../hooks/useUser";
-//import resources from "../../utils/resources";
 
 const Wrapper = styled.div`
 	padding-bottom: 5rem;
@@ -29,26 +27,27 @@ const Profile = () => {
   const { handle } = useParams(); 
   const [ viewedUser, setViewedUser] = useState(null);
   const [ profile, setProfile] = useState(null);
+  const [ userNotFound, setUserNotFound] = useState(false);
 
   
   useEffect(() => {
     const userContainer = getUserContainerById(handle);
-    if(!userContainer) return;
+    if(!userContainer) {
+      setUserNotFound(true);
+      return;
+    }
     setViewedUser(userContainer);
-
-    (async ()=>{
-      setProfile(await loadProfile(userContainer));
-    })();
+    setProfile(loadProfile(userContainer, (profile) => setProfile(profile))); 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handle])
 
   if (!profile) 
     return <Loader />;
-  
+
+  if(userNotFound)
+    return <p>User not found</p>;
 
   const isSelf = (isLoggedIn) ? handle === user.id : false;
-
-  console.log("Profile Render")
 
   return (
     <Wrapper>
@@ -62,7 +61,7 @@ const Profile = () => {
           </span> */}
         </div>
       </Header>
-      <ProfileInfo userid={viewedUser.id} profile={profile} isSelf={isSelf} />
+      <ProfileInfo user={viewedUser} profile={profile} isSelf={isSelf} />
       {/* {profile && profile.tweets && profile.tweets.length
         ? profile.tweets.map((tweet) => (
             <Tweet key={tweet.id} tweet={tweet} />

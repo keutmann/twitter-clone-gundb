@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import moment from "moment";
@@ -6,14 +6,9 @@ import DeleteTweet from "./DeleteTweet";
 import ConfirmReject from "../Message/ConfirmReject";
 import Retweet from "./Retweet";
 import { CommentIcon } from "../Icons";
-//import TweetFile from "../../styles/TweetFile";
-import useUser from "../../hooks/useUser";
 import AvatarIdenticon from "../AvatarIdenticon";
-import { getProfileValues } from '../../utils';
 import TweetMenu from './TweetMenu'
-// import DropdownButton from 'react-bootstrap/DropdownButton'
-// import Dropdown from 'react-bootstrap/Dropdown'
-
+import useProfile from '../../hooks/useProfile';
 
 const Wrapper = styled.div`
   display: flex;
@@ -102,21 +97,12 @@ const Wrapper = styled.div`
 
 const Tweet = ({ item }) => {
 
-  const { loadProfile } = useUser();
-  const [ profile, setProfile] = useState(null);
+  const profile = useProfile(item.owner);
 
-  useEffect(() => {
-    if (item.owner.profile) {
-      setProfile(item.owner.profile);
-    } else {
-      (async ()=>{
-        setProfile(await loadProfile(item.owner));
-      })();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [item])
+  const userid = item.owner.id;
+  const { handle, displayname } = profile;
 
-  const { userid, handle, displayname } = getProfileValues(item.owner.id, profile);
+  const itemUri = encodeURIComponent(item.soul);
   
   return (
     <Wrapper>
@@ -136,7 +122,7 @@ const Tweet = ({ item }) => {
           </div>
         </div>
 
-        <Link to={`/${userid}/time/${item.id}`}>
+        <Link to={`/tweet/${ itemUri }`}>
           <p>{item.data.text}</p>
         </Link>
 
@@ -159,7 +145,7 @@ const Tweet = ({ item }) => {
         <div className="tweet-stats">
           <div>
             <span className="comment">
-              <Link to={`/${userid}/time/${item.id}`}>
+              <Link to={`/tweet/${ itemUri }`}>
                 <CommentIcon />
                 {0 ? 0 : null}
               </Link>

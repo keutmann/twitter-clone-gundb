@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
 import Follow from "./Profile/Follow";
 import Button from "../styles/Button";
-import useUser from "../hooks/useUser";
 import AvatarIdenticon from "./AvatarIdenticon";
-import { getProfileValues } from '../utils';
+import useProfile from '../hooks/useProfile';
 
 
 const UserWrapper = styled.div`
@@ -42,27 +41,13 @@ const UserWrapper = styled.div`
 `;
 
 const FollowUser = ({ id, followUser }) => {
-	const { loadProfile } = useUser();
-	const [ profile, setProfile ] = useState(null);
 
-	useEffect(() => {
-        if(followUser.profile) {
-            setProfile(followUser.profile);
-        }
-		else {
-			(async () => {
-				setProfile(await loadProfile(followUser));
-			})();
-		}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
 
-    if(!profile) return <div>Loading user...</div>;
+	const profile = useProfile(followUser);
 
-	const { userid, handle, displayname } = getProfileValues(followUser.id, profile);
-	
-	console.log("FollowUser Render");
-
+	const userid = followUser.id;
+	const { handle, displayname } = profile;
+	  
     return (
 	<UserWrapper>
 		<div className="avatar-handle">
@@ -78,7 +63,7 @@ const FollowUser = ({ id, followUser }) => {
 		</div>
 
 		{!followUser.isSelf ? (
-			<Follow sm id={followUser.id} isFollowing={followUser.isFollowing} />
+			<Follow sm user={followUser} />
 		) : (
 			<Link to="/settings/profile">
 				<Button sm outline className="action-btn">

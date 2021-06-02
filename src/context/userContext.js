@@ -217,7 +217,7 @@ const UserProvider = (props) => {
         const userId = soulElem.shift();
         soulElem.shift(); // Just shift to next element
         const category = soulElem.shift();
-        const itemId = soulElem.join('');
+        const itemId = soulElem.join('/');
 
         const ownerContainer = getUserContainerById(userId);
 
@@ -266,19 +266,21 @@ const UserProvider = (props) => {
     );
 
     const loadProfile = React.useCallback(
-        async (user) => {
+        (user, cb) => {
 
             if (!user.profile) {
                 const preProfile = {
-                    handle: `${user.id.substring(0, 4)}...${user.id.substring(user.id.length - 4, user.id.length)}`,
+                    handle: `${user.id.substring(1, 5)}...${user.id.substring(user.id.length - 4, user.id.length)}`,
                     username: 'Anonymous'
                 };
 
                 user.profile = Object.assign({}, resources.node.profile, preProfile);
-                user.node.profile.once((val) => {
-                    user.profile = Object.assign({}, user.profile, val);
-                }, {wait:0});
-
+                if(cb) {
+                    user.node.profile.once((val) => {
+                        user.profile = Object.assign({}, user.profile, val);
+                        cb(user.profile);
+                    });
+                }
             }
             return user.profile;
         },
@@ -377,26 +379,11 @@ const UserProvider = (props) => {
                     load(localUser, currentLevel);
             });
 
-            // currentUser.node.distrust.map().on((value, key) => {
-            //     const localUser = getUser(key);
-            //     localUser.distrustCount = (localUser.distrustCount) ? localUser.distrustCount + 1 : 1;
-            //     currentUser.distrust[key] = localUser;
-
-            //     if(!userFound[key])
-            //         load(localUser, currentLevel);
-            // });
-
             currentUser.node.confirm.map().on((data, soul) => {
                 const item = getItem(soul);
                 item.confirmedBy[currentUser.id] = data;
                 //currentUser.confirm[soul] = item;
             });
-
-            // currentUser.node.reject.map().on((value, soul) => {
-            //     const item = getItem(soul);
-            //     item.rejectCount = (item.rejectCount) ? item.rejectCount + 1 : 1;
-            //     currentUser.reject[soul] = item;
-            // });
         }
 
         load(userContainer, maxlevel); // Follow max one level out

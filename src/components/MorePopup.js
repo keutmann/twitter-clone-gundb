@@ -3,10 +3,10 @@ import { ThemeContext } from "styled-components";
 import styled from "styled-components";
 import Popup from "reactjs-popup";
 import Svg from "../styles/Svg";
-import ToggleTheme from "./ToggleTheme";
-import Settings from "./Settings/SettingsMenuButton";
-import Logout from "./Auth/Logout";
-import ChangeColor from "./ChangeColor";
+import ToggleTheme from "./MenuItems/ToggleTheme";
+import Settings from "./MenuItems/SettingsMenuButton";
+import Logout from "./MenuItems/Logout";
+import ChangeColor from "./MenuItems/ChangeColor";
 
 const Wrapper = styled.div`
   .btn {

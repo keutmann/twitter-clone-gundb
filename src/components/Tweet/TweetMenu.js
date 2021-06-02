@@ -2,9 +2,10 @@ import React, { useContext } from "react";
 import { ThemeContext } from "styled-components";
 import styled from "styled-components";
 import Popup from "reactjs-popup";
-import ToggleTheme from "../ToggleTheme";
-import Settings from "../Settings/SettingsMenuButton";
-import ChangeColor from "../ChangeColor";
+import FollowUser from "../MenuItems/FollowUser";
+import MuteUser from "../MenuItems/MuteUser";
+import BlockUser from "../MenuItems/BlockUser";
+import AnalyseGraph from "../MenuItems/AnalyseGraph";
 
 const Wrapper = styled.div`
   .btn {
@@ -53,66 +54,13 @@ const TweetMenu = ({ item }) => {
         overlayStyle={overlayStyle}
         arrow={false}
       >
-        <ToggleTheme  />
-        <ChangeColor  />
-        <Settings />
+        <FollowUser user={ item.owner } />
+        <MuteUser user={ item.owner } />
+        <BlockUser user={ item.owner } />
+        <AnalyseGraph user={ item.owner }/>
       </Popup> 
     </Wrapper>
   );
 };
 
 export default TweetMenu;
-// import React from "react";
-// //import "./styles.css";
-// import "bootstrap/dist/css/bootstrap.min.css";
-// import Dropdown from "react-bootstrap/Dropdown";
-// import styled from "styled-components";
-
-
-// const Wrapper = styled.div`
-//     float: right;
-//     display: flex;
-//     padding-left: 0.5rem;
-    
-//     .dropdown a:hover { 
-//         text-decoration-line: none; 
-//     }
-
-//     .threedots:after {
-//         content: '\\2807';
-//         font-size: 30px;
-//     }
-// `;
-
-
-// const CustomToggle = React.forwardRef(({ children, onClick }, ref) => (
-//   // eslint-disable-next-line jsx-a11y/anchor-is-valid
-//   <a
-//     href=""
-//     ref={ref}
-//     onClick={e => {
-//       e.preventDefault();
-//       onClick(e);
-//     }}
-//   >
-//     {children}
-//     <span className="threedots" ></span>
-//   </a>
-// ));
-
-// const TweetMenu = ({ item }) => {
-//   return (
-//     <Wrapper>
-//         <Dropdown>
-//           <Dropdown.Toggle as={CustomToggle} />
-//           <Dropdown.Menu size="sm" title="">
-//             <Dropdown.Header>Options</Dropdown.Header>
-//             <Dropdown.Item>abcd</Dropdown.Item>
-//             <Dropdown.Item>erty</Dropdown.Item>
-//             <Dropdown.Item>hnjm</Dropdown.Item>
-//           </Dropdown.Menu>
-//         </Dropdown>
-//       </Wrapper>
-//   );
-// }
-// export default TweetMenu;

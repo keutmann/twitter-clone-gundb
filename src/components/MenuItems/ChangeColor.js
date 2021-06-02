@@ -1,6 +1,6 @@
 import React, { useState, useContext } from "react";
-import { ThemeContext } from "../context/ThemeContext";
-import { ColorIcon } from "./Icons";
+import { ThemeContext } from "../../context/ThemeContext";
+import { ColorIcon } from "../Icons";
 import { Wrapper } from "./ToggleTheme";
 
 const ChangeColor = () => {

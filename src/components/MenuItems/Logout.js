@@ -2,7 +2,7 @@ import React from "react";
 import { toast } from "react-toastify";
 import { HomeIcon } from "../Icons";
 //import { ThemeContext } from "../../context/ThemeContext";
-import { Wrapper } from "../ToggleTheme";
+import { Wrapper } from "./ToggleTheme";
 import useUser from '../../hooks/useUser';
 
 

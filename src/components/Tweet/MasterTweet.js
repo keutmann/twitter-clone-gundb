@@ -1,30 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-//import { useQuery } from 'react-query'
 import styled from "styled-components";
 import Header from "../Header";
-// import { TWEET } from "../../queries/tweet";
 import Loader from "../Loader";
 import Tweet from "./Tweet";
 import Comment from "../Comment/Comment";
 import AddComment from "../Comment/AddComment";
-//import { sortFn } from "../../utils";
-//import CustomResponse from "../CustomResponse";
 import useUser  from '../../hooks/useUser';
-//import Gun from 'gun';
 import resources from "../../utils/resources";
-//import { createContainer } from '../../utils';
+
 
 const Wrapper = styled.div`
   margin-bottom: 7rem;
 `;
 
 const MasterTweet = () => {
-  const { handle, tweetId } = useParams();
+  const { handle } = useParams();
   const { getUserContainerById, createContainer } = useUser();
-
-
-
   const [ tweetContainer, setTweetContainer] = useState();
   const [ comments, setComments] = useState();
 
@@ -32,22 +24,32 @@ const MasterTweet = () => {
     if(tweetContainer) return;
 
     (async() => {
-      const userContainer = getUserContainerById(handle);
-      const tweetNode = userContainer.node.tweets.get(tweetId);
+      
+      const soul = decodeURIComponent(handle);
+      const soulElem = soul.split('/');
+      const userId = soulElem.shift();
+      soulElem.shift(); // Just shift to next element
+      soulElem.shift();
+      const userContainer = getUserContainerById(userId);
 
-      const tweet = await tweetNode.once(p=>p, {wait:0}).then();
+      const dateString = `${soulElem[0]}-${soulElem[1]}-${soulElem[2]}T${soulElem[3]}:${soulElem[4]}:${soulElem[5]}.${soulElem[6]}Z`
+
+      const tweetNode = userContainer.node.tree.get(dateString);
+      const tweet = await tweetNode.then(); 
+
       const item = createContainer(tweet);
       
       setTweetContainer(item);
 
-      const commentsData = await tweetNode.get(resources.node.names.comments).once(p=>p, {wait:0}).then();
+      //const commentsData = await tweetNode.get(resources.node.names.comments).once(p=>p, {wait:0}).then();
+      const commentsData = await tweetNode.get(resources.node.names.comments).then();
 
       const arr = Object.keys(commentsData).filter(p=> p !== '_').map(p=> p);
       setComments(arr);
     })();
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handle, tweetId, createContainer]);
+  }, [handle, createContainer]);
 
 
   // const comments =
