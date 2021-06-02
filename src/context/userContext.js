@@ -261,31 +261,24 @@ const UserProvider = (props) => {
 
     }, [isLoggedIn, user, gun]);
 
-    const setProfile = React.useCallback(
-        async (profileData) => {
-            if (!isLoggedIn) return;
-
-            user.node.profile.put(profileData);
-        },
-        [isLoggedIn, user]
-    );
-
     const loadProfile = React.useCallback(
         (user, cb) => {
 
-            if (!user.profile) {
+            if(!user.profile) {
                 const preProfile = {
                     handle: `${user.id.substring(1, 5)}...${user.id.substring(user.id.length - 4, user.id.length)}`,
-                    username: 'Anonymous'
+                    username: 'Anonymous',
+                    auto: true
                 };
 
                 user.profile = Object.assign({}, resources.node.profile, preProfile);
-                if(cb) {
-                    user.node.profile.once((val) => {
-                        user.profile = Object.assign({}, user.profile, val);
-                        cb(user.profile);
-                    });
-                }
+            }
+            if(cb && user.profile.auto) {
+                user.profile.auto = false;
+                user.node.profile.once((val) => {
+                    user.profile = Object.assign({}, user.profile, val);
+                    cb(user.profile);
+                });
             }
             return user.profile;
         },
@@ -341,7 +334,9 @@ const UserProvider = (props) => {
                     addFeed(item);
                 });
             })
-            //currentUser.node.tweets.get(resources.node.names.latest).on(addFeed);
+
+            currentUser.node.tweetsMetadata.get(resources.node.names.latest).on(addFeed);
+            //currentUser.node.commentsMetadata.get(resources.node.names.latest).on(addFeed);
             //currentUser.node.tweets.get(resources.node.names.delete).on(removeFromFeed);
 
             if(--currentLevel < 0)
@@ -484,13 +479,13 @@ const UserProvider = (props) => {
     const value = React.useMemo(
         () => ({
             user, users, gun, isLoggedIn, feed, feedIndex, feedReady, messageReceived, userSignUp, loginPassword, 
-            logout, setFeed, setProfile, getUserContainerById,
+            logout, setFeed, getUserContainerById,
             loadProfile, followUser, setMessageReceived, resetFeedReady, loadFeed,
             createContainer
         }),
         [
             user, users, gun, isLoggedIn, feed, feedIndex, feedReady, messageReceived, 
-            userSignUp, loginPassword, logout, setFeed, setProfile, getUserContainerById, 
+            userSignUp, loginPassword, logout, setFeed, getUserContainerById, 
             loadProfile, followUser, setMessageReceived, resetFeedReady, loadFeed,
             createContainer
         ]

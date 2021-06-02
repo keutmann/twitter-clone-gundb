@@ -15,7 +15,7 @@ import useUser from "../../hooks/useUser";
 
 const EditProfileForm = ({ history }) => {
 
-  const { user, setProfile } = useUser();
+  const { user } = useUser();
 
   const [avatarState, setAvatar] = useState("");
   const [coverPhotoState, setCoverPhoto] = useState("");
@@ -38,18 +38,21 @@ const EditProfileForm = ({ history }) => {
 
     try {
       let formData ={
-          displayname: displayname.value,
-          //dob: dob.value,
-          bio: bio.value,
-          //location: location.value,
-          website: website.value,
+          displayname: displayname.value+'',
+          bio: bio.value+'',
+          website: website.value+'',
           avatar: avatarState ? avatarState : avatar.value,
-          coverPhoto: coverPhotoState ? coverPhotoState : coverPhoto.value
+          coverPhoto: coverPhotoState ? coverPhotoState : coverPhoto.value,
+          location: '',
+          dob : ''
       };
+
+      // There may be no undefined properties in the object or it will not be saved to the gun graph
+      formData.avatar = '';
 
       let updatedData = Object.assign(profile, formData);
 
-      setProfile(updatedData);
+      user.node.profile.put(updatedData);
 
       toast.success("Your profile has been updated 🥳");
     } catch (err) {
