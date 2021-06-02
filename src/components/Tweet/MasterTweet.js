@@ -32,11 +32,10 @@ const MasterTweet = () => {
       
       soulElem.shift(); // Shift dpeep
       soulElem.shift(); // Shift tweets
-      soulElem.shift(); // Shift tree
       
       const dateString = `${soulElem[0]}-${soulElem[1]}-${soulElem[2]}T${soulElem[3]}:${soulElem[4]}:${soulElem[5]}.${soulElem[6]}Z`
 
-      const tweetNode = userContainer.node.tree.get(dateString);
+      const tweetNode = userContainer.node.tweets.get(dateString);
       const tweet = await tweetNode.then(); 
 
       const item = createContainer(tweet);

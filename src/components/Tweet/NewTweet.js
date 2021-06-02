@@ -68,21 +68,12 @@ const NewTweet = () => {
 
     tweet.createdAt = tweetId;
 
-    const tweetNode = user.node.tree.get(date);
-    const tweetData = await tweetNode.put(tweet).then();
-
-    // Chain up tweets
-    const previousTweetNode = user.node.tweets.get(resources.node.names.latest);
-    previousTweetNode.once((value, key) => {
-        tweetNode.get(resources.node.names.next).put(value);
-        //previousTweetNode.get('previous').put(tweetNode); // Maybe TweetData !?        
-    });
-
-    user.node.tweets.get(resources.node.names.latest).put(tweetData);
+    const tweetNode = user.node.tweets.get(date);
+    tweetNode.put(tweet);
 
     // Add comments object from the Gun root, as this is writeable for everone.
-    const commentsID = user.id+tweetId;
-    const commentsData = await gun.get(resources.node.names.dpeep).get(resources.node.names.comments).get(user.id).get(commentsID).put({}).once(p=>p, {wait:0}).then();
+    const comments = gun.get(resources.node.names.dpeep).get(resources.node.names.comments).get(user.id).get(tweetId);
+    const commentsData = comments.put({}); 
     tweetNode.get(resources.node.names.comments).put(commentsData);
   }
 

@@ -157,11 +157,15 @@ const UserProvider = (props) => {
             const pubId = (gunUser.is) ? '~'+gunUser.is.pub : gunUser["_"]["soul"];
             const dpeep = gunUser.get(resources.node.names.dpeep);
             const profile = dpeep.get(resources.node.names.profile);
-            const tweets = dpeep.get(resources.node.names.tweets);
-            const tweetsTree = tweets.get("tree"); // The DateTree root has to be clean of other properties not related to DateTree. Or iteration will fail etc.
+            // The DateTree root has to be clean of other properties not related to DateTree. Or iteration will fail etc.
+            const tweets = new DateTree(dpeep.get(resources.node.names.tweets), 'millisecond'); 
+            const tweetsMetadata = dpeep.get(resources.node.names.tweetsMetadata);
+
             const follow = dpeep.get(resources.node.names.follow);
             const trust = dpeep.get(resources.node.names.trust);
             const confirm  = dpeep.get(resources.node.names.confirm);
+            const comments = new DateTree(dpeep.get(resources.node.names.comments), 'millisecond');
+
             // Options
             // ---------------
             // Trust- x levels
@@ -178,17 +182,17 @@ const UserProvider = (props) => {
             // Mute - single
 
             //const treeRoot = tweets.get('treeRoot');
-            const tree = new DateTree(tweetsTree, 'millisecond'); // Do not work properly, events do not get fired and data not stored.
             
             const node = { 
                 user: gunUser, 
                 tweets, 
-                tree,
+                tweetsMetadata,
                 profile, 
                 follow, 
                 dpeep,
                 trust,
                 confirm,
+                comments
              };
             const container = { id: pubId, node, trust: {}, distrust: {}, confirm: {}, reject: {} };
             users[pubId] = Object.assign({}, users[pubId], container);
@@ -218,7 +222,6 @@ const UserProvider = (props) => {
         const userId = soulElem.shift();
         soulElem.shift(); // Just shift to next element
         const category = soulElem.shift();
-        soulElem.shift(); // Just shift the tree away,
         const itemId = soulElem.join('/');
 
         const ownerContainer = getUserContainerById(userId);
@@ -292,7 +295,7 @@ const UserProvider = (props) => {
 
 
     // Methods ----------------------------------------------------------------------
-    const addFeed = React.useCallback((data, key) => {
+    const addFeed = React.useCallback(data => {
         if(!data) // Data is null, we need to remove it from feed!? But what id?
             return;
 
@@ -331,8 +334,15 @@ const UserProvider = (props) => {
         {
             userFound[currentUser.id] = true;
 
-            currentUser.node.tweets.get(resources.node.names.latest).on(addFeed);
-            currentUser.node.tweets.get(resources.node.names.delete).on(removeFromFeed);
+            const latest = currentUser.node.tweets.latest();
+            latest?.then((arr) => {
+                let [latestRef] = arr;
+                latestRef.then( item => {
+                    addFeed(item);
+                });
+            })
+            //currentUser.node.tweets.get(resources.node.names.latest).on(addFeed);
+            //currentUser.node.tweets.get(resources.node.names.delete).on(removeFromFeed);
 
             if(--currentLevel < 0)
                 return;  
@@ -490,3 +500,4 @@ const UserProvider = (props) => {
 };
 
 export { UserProvider, UserContext };
+

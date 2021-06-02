@@ -22,15 +22,15 @@ const ProfileFeed = ({ user }) => {
     if(feed) 
       return; // The feed has been loaded, do not reload
 
-    const tree = user.node.tree;
+    const tweets = user.node.tweets;
     (async () => {
       let data = [];
       // A naive implementation would have close to a billion
       // nodes and would take forever to iterate.
       // This takes only a second:
-      for await (let [ref, date] of tree.iterate({ order: -1 })) {
+      for await (let [ref] of tweets.iterate({ order: -1 })) {
           let tweet = await ref.then();
-          console.log(`${date} tweet: ${tweet}`);
+          //console.log(`${date} tweet: ${tweet}`);
           if(!tweet) continue;
           const item = createContainer(tweet);
           data.push(item);
