@@ -8,6 +8,7 @@ import Comment from "../Comment/Comment";
 import AddComment from "../Comment/AddComment";
 import useUser  from '../../hooks/useUser';
 import resources from "../../utils/resources";
+import { DateTree } from 'gun-util';
 
 
 const Wrapper = styled.div`
@@ -17,11 +18,12 @@ const Wrapper = styled.div`
 const MasterTweet = () => {
   const { handle } = useParams();
   const { getUserContainerById, createContainer } = useUser();
-  const [ tweetContainer, setTweetContainer] = useState();
+  const [ tweet, setTweet] = useState();
   const [ comments, setComments] = useState();
+  const [ tweetNode, setTweetNode] = useState();
 
   useEffect(() => {
-    if(tweetContainer) return;
+    if(tweet) return;
 
     (async() => {
       
@@ -35,33 +37,38 @@ const MasterTweet = () => {
       
       const dateString = `${soulElem[0]}-${soulElem[1]}-${soulElem[2]}T${soulElem[3]}:${soulElem[4]}:${soulElem[5]}.${soulElem[6]}Z`
 
-      const tweetNode = userContainer.node.tweets.get(dateString);
-      const tweet = await tweetNode.then(); 
-
-      const item = createContainer(tweet);
+      const node = userContainer.node.tweets.get(dateString);
+      setTweetNode(node);
       
-      setTweetContainer(item);
+      const data = await node.then(); 
 
-      //const commentsData = await tweetNode.get(resources.node.names.comments).once(p=>p, {wait:0}).then();
-      const commentsData = await tweetNode.get(resources.node.names.comments).then();
+      const tweet = createContainer(data);
+      
+      setTweet(tweet);
 
-      const arr = Object.keys(commentsData).filter(p=> p !== '_').map(p=> p);
-      setComments(arr);
+      const commentsTree = new DateTree(node.get(resources.node.names.comments), 'millisecond');
+
+      let list = [];
+      for await (let [ref] of commentsTree.iterate({ order: 1 })) {
+          let data = await ref.then();
+          if(!data) continue;
+
+          const keys = Object.keys(data).filter( p=> p !== '_')
+          for(let key of keys) {
+            const item = await ref.get(key).then();
+            //const item = data[key];
+            const container = createContainer(item);
+            list.push(container);
+          };
+      }
+
+      setComments(list);
     })();
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handle, createContainer]);
 
-
-  // const comments =
-  //   data && data.tweet && data.tweet.comments && data.tweet.comments.length
-  //     ? data.tweet.comments
-  //     : [];
-  // comments.sort(sortFn);
-
-  if(!tweetContainer) return <Loader />
-
-  console.log("MasterTweet Render");
+  if(!tweet) return <Loader />
 
   return (
     <Wrapper>
@@ -69,13 +76,13 @@ const MasterTweet = () => {
         <span>Tweet</span>
       </Header>
         <>
-          <Tweet key={tweetContainer.soul} item={tweetContainer} />
-          <AddComment id={tweetContainer.id} />
+          <Tweet key={tweet.soul} item={tweet} />
+          <AddComment tweetNode={tweetNode} />
           {
             (comments) ?
-            comments.map((comment) => (<Comment key={comment} comment={comment} />)) 
+            comments.map((comment) => (<Comment key={comment.id} item={comment} />)) 
             : 
-            <Loader />
+            <p>No comments or in process of loading.</p>
           }
         </>
     </Wrapper>

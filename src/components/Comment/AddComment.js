@@ -2,18 +2,17 @@ import React from "react";
 import styled from "styled-components";
 import { toast } from "react-toastify";
 import TextareaAutosize from "react-textarea-autosize";
-//import {  useMutation } from "@apollo/react-hooks";
+
 import useInput from "../../hooks/useInput";
 import Button from "../../styles/Button";
 import { displayError } from "../../utils";
 import AvatarIdenticon from "../AvatarIdenticon";
-//import Avatar from "../../styles/Avatar";
-// import { TWEET } from "../../queries/tweet";
-// import { ADD_COMMENT } from "../../queries/comment";
-//import { USER } from "../../queries/client";
-//import Loader from "../Loader";
+
 import Loader from "../Loader";
 import useUser from "../../hooks/useUser";
+import resources from '../../utils/resources';
+import { DateTree } from 'gun-util';
+
 
 const Wrapper = styled.div`
 	display: flex;
@@ -47,7 +46,7 @@ const Wrapper = styled.div`
 	}
 `;
 
-const AddComment = ({ id }) => {
+const AddComment = ({ tweetNode }) => {
 
   const { user } = useUser();
 
@@ -59,12 +58,23 @@ const AddComment = ({ id }) => {
     if (!comment.value) return toast("Reply something");
 
     try {
-      // await addCommentMutation({
-      //   variables: {
-      //     id,
-      //     text: comment.value,
-      //   },
-      // });
+
+
+      const date = new Date();
+      //const tweetId = moment().toISOString();
+      const commentId = date.toISOString();
+  
+      const data = {
+        text: comment.value,
+        createdAt: commentId
+      }
+      
+      const commentNode = user.node.comments.get(date); 
+      const commentData = await commentNode.put(data).then(); // Add Comment to DateTree and wait for the Gun data object.
+      commentNode.get(resources.node.names.tweet).put(tweetNode); // Add a reference to the Tweet object
+
+      const tweetCommentsTree = new DateTree(tweetNode.get(resources.node.names.comments), 'millisecond');
+      tweetCommentsTree.get(date).get(user.id).put(commentData);
 
       toast.success("Your reply has been added");
     } catch (err) {

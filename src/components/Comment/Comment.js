@@ -2,12 +2,11 @@ import React, { useEffect } from "react";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
 import moment from "moment";
-import Avatar from "../../styles/Avatar";
+import AvatarIdenticon from "../AvatarIdenticon";
 import DeleteComment from "./DeleteComment";
 import useUser  from '../../hooks/useUser';
 import Confirm from "../Message/Confirm";
-//import Gun from 'gun';
-//import resources from "../../utils/resources";
+import useProfile from '../../hooks/useProfile';
 
 const Wrapper = styled.div`
   display: flex;
@@ -59,34 +58,40 @@ const Wrapper = styled.div`
 `;
 
 const Comment = ({ item }) => {
-  const { id, text, isCommentMine, user, createdAt } = item;
-  const { getUserContainerById } = useUser();
+  const profile = useProfile(item.owner);
+
+  const { handle, displayname } = profile;
+
+  const { id, data, isCommentMine, owner } = item;
+  //const { getUserContainerById } = useUser();
 
   //const [comment, setComment ] = useState();
 
-  useEffect(() => {
-    item.user = getUserContainerById(item.userId);
+  // useEffect(() => {
+  //   item.user = getUserContainerById(item.userId);
 
 
-    //setComment(item);
-  },[item, getUserContainerById]);
+  //   //setComment(item);
+  // },[item, getUserContainerById]);
 
-  const handle = user && user.handle;
+  //const handle = owner && owner.handle;
 
   return (
     <Wrapper>
-      <Avatar className="avatar" src={user && user.avatar} alt="avatar" />
+      <Link to={`/${owner.id}`}>
+        <AvatarIdenticon id={owner.id} profile={profile} />
+      </Link>
       <div className="comment-info">
         <div className="comment-info-user">
-          <span className="username">{user && user.fullname}</span>
+          <span className="username">{displayname}</span>
           <Link to={`/${handle}`}>
             <span className="secondary">{`@${handle}`}</span>
-            <span className="secondary">{moment(createdAt).fromNow()}</span>
+            <span className="secondary">{moment(item.data.createdAt).fromNow()}</span>
           </Link>
           <span>{isCommentMine ? <DeleteComment id={id} /> : null}</span>
         </div>
 
-        <p>{text}</p>
+        <p>{data.text}</p>
       </div>
       <div>
           <Confirm id={item.id} isConfirmed={item.confirmed || false} confirmCount={0} />

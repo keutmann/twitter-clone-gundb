@@ -4,6 +4,7 @@ const resources = {
                 dpeep : "dpeep",
                 profile : "profile",
                 people: "people",
+                tweet: "tweet",
                 tweets: "tweets",
                 tweetsMetadata: "tweetsMetadata",
                 follow : "follow",

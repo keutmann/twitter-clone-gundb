@@ -303,20 +303,20 @@ const UserProvider = (props) => {
 
     }, [createContainer, feedIndex, feedReady]); // User here is the viewer
 
-    const removeFromFeed = React.useCallback((soul, key) => {
-        if(!soul) // Data is null, we need to remove it from feed!? But what id?
-            return false;
+    // const removeFromFeed = React.useCallback((soul, key) => {
+    //     if(!soul) // Data is null, we need to remove it from feed!? But what id?
+    //         return false;
 
-        if(!feedIndex[soul])
-            return false;
+    //     if(!feedIndex[soul])
+    //         return false;
 
-        delete feedIndex[soul];
-        delete feedReady[soul];
-        setMessageReceived(soul);
+    //     delete feedIndex[soul];
+    //     delete feedReady[soul];
+    //     setMessageReceived(soul);
 
-        return true;
+    //     return true;
 
-    }, [feedReady, feedIndex]); // User here is the viewer
+    // }, [feedReady, feedIndex]); // User here is the viewer
 
 
     const initializeFeed = (userContainer) => {

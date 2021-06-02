@@ -11,7 +11,6 @@ import AvatarIdenticon from "../AvatarIdenticon";
 import { uploadImage } from "../../utils";
 import Loader from "../Loader";
 import useUser  from '../../hooks/useUser';
-//import moment from 'moment'
 import resources from '../../utils/resources';
 
 
