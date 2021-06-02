@@ -80,7 +80,7 @@ const MasterTweet = () => {
           <AddComment tweetNode={tweetNode} />
           {
             (comments) ?
-            comments.map((comment) => (<Comment key={comment.id} item={comment} />)) 
+            comments.map((item) => (<Comment key={item.id} item={item} />)) 
             : 
             <p>No comments or in process of loading.</p>
           }

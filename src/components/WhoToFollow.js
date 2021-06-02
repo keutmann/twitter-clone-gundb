@@ -20,23 +20,20 @@ const Wrapper = styled.div`
 
 
 const WhoToFollow = () => {
-	const { user: userContainer, gun, getUserContainerById} = useUser();
+	const { user, gun, getUserContainerById} = useUser();
 
 	const [ list, setList ] = useState(null);
 
 	useEffect(() => {
-		if(!userContainer) return; // User context has not loaded yet. No Gun object available.
-		if(list) return;
-
 		(async () => {
 			const availableUsers = await gun.get(resources.node.names.dpeep).get(resources.node.names.userIndex).once(p=>p, {wait:0}).then() || {};
-			const userFollows = await userContainer.node.follow.once(p=>p,{wait:0}).then() || {};
+			const userFollows = await user.node.follow.once(p=>p,{wait:0}).then() || {};
 			
-			const allUsers = Object.keys(availableUsers).filter(key => key !== '_' && key !== userContainer.id && availableUsers[key]).map(key => {
+			const allUsers = Object.keys(availableUsers).filter(key => key !== '_' && key !== user.id && availableUsers[key]).map(key => {
 				const keyUser = getUserContainerById(key);
 				
 				keyUser.isFollowing = !(!userFollows[key]);
-				keyUser.isSelf = (key === userContainer.id);
+				keyUser.isSelf = (key === user.id);
 
 				return keyUser;	
 			} );
@@ -44,16 +41,18 @@ const WhoToFollow = () => {
 			setList(allUsers || []);
 		})();
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [userContainer]);
+	}, []);
 
 	if(!list) return <Loader />;
-	console.log("WhoToFollow Render");
 
 	return (
 		<Wrapper>
 			<Header>Who to follow</Header>
 			{
-				list.map(followUser => <FollowUser key={followUser.id} followUser={followUser} /> )
+				(list.length > 0) ?
+					list.map(followUser => <FollowUser key={followUser.id} followUser={followUser} /> )
+					:
+					<p>No other users was found</p>
 			}
 		</Wrapper>
 	);

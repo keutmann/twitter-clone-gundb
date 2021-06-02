@@ -1,6 +1,7 @@
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import styled from "styled-components";
 import ProfileFeed from "./ProfileFeed";
+import CommentsFeed from "../Comment/CommentsFeed";
 
 const Wrapper = styled.div`
 
@@ -73,7 +74,7 @@ const ProfileTabs = ( {user} ) => (
       <ProfileFeed user={user} />
     </TabPanel>
     <TabPanel>
-      <p>Nothing here!</p>
+      <CommentsFeed user={user} />
     </TabPanel>
   </Tabs>
   </Wrapper>

@@ -63,18 +63,6 @@ const Comment = ({ item }) => {
   const { handle, displayname } = profile;
 
   const { id, data, isCommentMine, owner } = item;
-  //const { getUserContainerById } = useUser();
-
-  //const [comment, setComment ] = useState();
-
-  // useEffect(() => {
-  //   item.user = getUserContainerById(item.userId);
-
-
-  //   //setComment(item);
-  // },[item, getUserContainerById]);
-
-  //const handle = owner && owner.handle;
 
   return (
     <Wrapper>

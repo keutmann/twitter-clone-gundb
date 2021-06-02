@@ -330,6 +330,7 @@ const UserProvider = (props) => {
             const latest = currentUser.node.tweets.latest();
             latest?.then((arr) => {
                 let [latestRef] = arr;
+                if(!latestRef) return;
                 latestRef.then( item => {
                     addFeed(item);
                 });
