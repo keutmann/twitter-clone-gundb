@@ -4,12 +4,16 @@ import { ThemeContext } from "../../context/ThemeContext";
 import { BlockIcon } from "../Icons";
 import useProfile from '../../hooks/useProfile';
 import useBlock from "../../hooks/useBlock";
+import useUser from "../../hooks/useUser";
 
 const BlockUser = ({ user }) => {
-
+  const { user: loggedInUser } = useUser();
   const profile = useProfile(user);
   const { theme } = useContext(ThemeContext);
   const [isBlocked, setBlock] = useBlock(user);
+
+  if(loggedInUser.id === user.id) 
+    return null; // Ignore myself
 
   const { handle } = profile;
 
