@@ -158,6 +158,7 @@ const UserProvider = (props) => {
             const dpeep = gunUser.get(resources.node.names.dpeep);
             const profile = dpeep.get(resources.node.names.profile);
             const tweets = dpeep.get(resources.node.names.tweets);
+            const tweetsTree = tweets.get("tree"); // The DateTree root has to be clean of other properties not related to DateTree. Or iteration will fail etc.
             const follow = dpeep.get(resources.node.names.follow);
             const trust = dpeep.get(resources.node.names.trust);
             const confirm  = dpeep.get(resources.node.names.confirm);
@@ -177,7 +178,7 @@ const UserProvider = (props) => {
             // Mute - single
 
             //const treeRoot = tweets.get('treeRoot');
-            const tree = new DateTree(tweets, 'millisecond'); // Do not work properly, events do not get fired and data not stored.
+            const tree = new DateTree(tweetsTree, 'millisecond'); // Do not work properly, events do not get fired and data not stored.
             
             const node = { 
                 user: gunUser, 
@@ -217,6 +218,7 @@ const UserProvider = (props) => {
         const userId = soulElem.shift();
         soulElem.shift(); // Just shift to next element
         const category = soulElem.shift();
+        soulElem.shift(); // Just shift the tree away,
         const itemId = soulElem.join('/');
 
         const ownerContainer = getUserContainerById(userId);

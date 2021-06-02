@@ -28,10 +28,12 @@ const MasterTweet = () => {
       const soul = decodeURIComponent(handle);
       const soulElem = soul.split('/');
       const userId = soulElem.shift();
-      soulElem.shift(); // Just shift to next element
-      soulElem.shift();
       const userContainer = getUserContainerById(userId);
-
+      
+      soulElem.shift(); // Shift dpeep
+      soulElem.shift(); // Shift tweets
+      soulElem.shift(); // Shift tree
+      
       const dateString = `${soulElem[0]}-${soulElem[1]}-${soulElem[2]}T${soulElem[3]}:${soulElem[4]}:${soulElem[5]}.${soulElem[6]}Z`
 
       const tweetNode = userContainer.node.tree.get(dateString);

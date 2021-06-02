@@ -5,6 +5,7 @@ import Header from "../Header";
 import ProfileInfo from "./ProfileInfo";
 import Loader from "../Loader";
 import useUser from "../../hooks/useUser";
+import ProfileTabs from "./ProfileTabs";
 
 const Wrapper = styled.div`
 	padding-bottom: 5rem;
@@ -67,6 +68,7 @@ const Profile = () => {
             <Tweet key={tweet.id} tweet={tweet} />
           ))
         : null} */}
+      <ProfileTabs user={viewedUser} />
     </Wrapper>
   );
 };

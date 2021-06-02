@@ -69,7 +69,7 @@ const NewTweet = () => {
     tweet.createdAt = tweetId;
 
     const tweetNode = user.node.tree.get(date);
-    const tweetData = await tweetNode.put(tweet);
+    const tweetData = await tweetNode.put(tweet).then();
 
     // Chain up tweets
     const previousTweetNode = user.node.tweets.get(resources.node.names.latest);

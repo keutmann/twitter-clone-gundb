@@ -71,7 +71,6 @@ const FeedList = () => {
   }, [])
 
   if(!feed) return <Loader />;
-  console.log("FeedList render");
 
   return (
     <Wrapper>

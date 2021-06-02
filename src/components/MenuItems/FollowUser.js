@@ -4,12 +4,17 @@ import useProfile from '../../hooks/useProfile';
 import useFollow from "../../hooks/useFollow";
 import MenuButton from "../../styles/MenuButton";
 import { PersonPlus, PersonDash } from 'react-bootstrap-icons';
+import useUser from "../../hooks/useUser";
 
 const FollowUser = ({ user }) => {
 
+  const { user: loggedInUser } = useUser();
   const profile = useProfile(user);
   const { theme } = useContext(ThemeContext);
   const [followState, setFollow] = useFollow(user);
+
+  if(loggedInUser.id === user.id) 
+    return null; // Ignore myself
 
   const { handle } = profile;
 

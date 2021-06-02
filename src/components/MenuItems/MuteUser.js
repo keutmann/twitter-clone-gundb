@@ -4,12 +4,18 @@ import useProfile from '../../hooks/useProfile';
 import useMute from "../../hooks/useMute";
 import MenuButton from "../../styles/MenuButton";
 import { Eye, EyeSlash } from 'react-bootstrap-icons';
+import useUser from "../../hooks/useUser";
+
 
 const MuteUser = ({ user }) => {
 
+  const { user: loggedInUser } = useUser();
   const profile = useProfile(user);
   const { theme } = useContext(ThemeContext);
   const [isMuteed, setMute] = useMute(user);
+
+  if(loggedInUser.id === user.id) 
+    return null; // Ignore myself
 
   const { handle } = profile;
 
