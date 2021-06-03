@@ -24,5 +24,7 @@ npm start
 # Start Gun Server
 
 cd node_modules
+
 cd gun
+
 npm start
