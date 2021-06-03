@@ -9,7 +9,7 @@ The intention is to demo a Trust-based discussion forum.
 
 npm install
 
-Gun DB is install directly from github as the npm package can be old.
+Gun DB may need to be installed directly from github as the npm package can be old.
 
 npm install git+https://github.com/gundb/gun.git
 
@@ -21,7 +21,7 @@ npm audit fix --force
 
 npm start
 
-#Gun 
+# Start Gun Server
 
 cd node_modules
 cd gun
