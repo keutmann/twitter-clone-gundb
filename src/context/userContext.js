@@ -154,17 +154,20 @@ const UserProvider = (props) => {
     const getUserContainer = React.useCallback(
         (gunUser) => {
 
-            const pubId = (gunUser.is) ? '~'+gunUser.is.pub : gunUser["_"]["soul"];
+            let pub = (gunUser.is) ? gunUser.is.pub : gunUser["_"]["soul"];
+            const pubId = (pub[0] === '~') ? pub.substring(1) : pub;
+
             const dpeep = gunUser.get(resources.node.names.dpeep);
             const profile = dpeep.get(resources.node.names.profile);
             // The DateTree root has to be clean of other properties not related to DateTree. Or iteration will fail etc.
             const tweets = new DateTree(dpeep.get(resources.node.names.tweets), 'millisecond'); 
             const tweetsMetadata = dpeep.get(resources.node.names.tweetsMetadata);
 
-            const follow = dpeep.get(resources.node.names.follow);
-            const trust = dpeep.get(resources.node.names.trust);
-            const confirm  = dpeep.get(resources.node.names.confirm);
-            const comments = new DateTree(dpeep.get(resources.node.names.comments), 'millisecond');
+            const relationships = dpeep.get(resources.node.names.relationships);
+            const relationshipsMetadata = dpeep.get(resources.node.names.relationshipsMetadata);
+
+            const claims = new DateTree(dpeep.get(resources.node.names.claims), 'month'); // Combine all claims into one month batch, estimated best performance. 
+            const claimsMetadata = dpeep.get(resources.node.names.claimsMetadata);
 
             // Options
             // ---------------
@@ -188,13 +191,15 @@ const UserProvider = (props) => {
                 tweets, 
                 tweetsMetadata,
                 profile, 
-                follow, 
                 dpeep,
-                trust,
-                confirm,
-                comments
+                // people,
+                // peopleMetadata,
+                relationships,
+                relationshipsMetadata,
+                claims,
+                claimsMetadata
              };
-            const container = { id: pubId, node, trust: {}, distrust: {}, confirm: {}, reject: {} };
+            const container = { id: pubId, node, relationshipBy: {}, relationships: {} };
             users[pubId] = Object.assign({}, users[pubId], container);
 
             return users[pubId];
@@ -208,7 +213,8 @@ const UserProvider = (props) => {
             const user = users[pubId]; 
             if (user && user.node) return user; // Just return an exiting container is exist and node is set
 
-            const gunUser = gun.user(pubId);
+            const cleanPubID = pubId[0] === '~' ? pubId.substring(1) : pubId;
+            const gunUser = gun.user(cleanPubID);
 
             return getUserContainer(gunUser); // Create a new one
         },
@@ -266,7 +272,7 @@ const UserProvider = (props) => {
 
             if(!user.profile) {
                 const preProfile = {
-                    handle: `${user.id.substring(1, 5)}...${user.id.substring(user.id.length - 4, user.id.length)}`,
+                    handle: `${user.id.substring(0, 4)}...${user.id.substring(user.id.length - 4, user.id.length)}`,
                     username: 'Anonymous',
                     auto: true
                 };
@@ -319,82 +325,129 @@ const UserProvider = (props) => {
     // }, [feedReady, feedIndex]); // User here is the viewer
 
 
-    const initializeFeed = (userContainer) => {
-        console.log("Subscribing to users feed - GUN Style");
-        const userFound = {}; // Make sure only to process the user once.
+    // const initializeFeed = (userContainer) => {
+    //     console.log("Subscribing to users feed - GUN Style");
+    //     const userFound = {}; // Make sure only to process the user once.
 
-        function loadFeed(currentUser, currentLevel) 
-        {
-            userFound[currentUser.id] = true;
+    //     function loadFeed(currentUser, currentLevel) 
+    //     {
+    //         userFound[currentUser.id] = true;
 
-            const latest = currentUser.node.tweets.latest();
-            latest?.then((arr) => {
-                let [latestRef] = arr;
-                if(!latestRef) return;
-                latestRef.then( item => {
-                    addFeed(item);
-                });
-            })
+    //         const latest = currentUser.node.tweets.latest();
+    //         latest?.then((arr) => {
+    //             let [latestRef] = arr;
+    //             if(!latestRef) return;
+    //             latestRef.then( item => {
+    //                 addFeed(item);
+    //             });
+    //         })
 
-            currentUser.node.tweetsMetadata.get(resources.node.names.latest).on(addFeed);
-            //currentUser.node.commentsMetadata.get(resources.node.names.latest).on(addFeed);
-            //currentUser.node.tweets.get(resources.node.names.delete).on(removeFromFeed);
+    //         currentUser.node.tweetsMetadata.get(resources.node.names.latest).on(addFeed);
+    //         //currentUser.node.commentsMetadata.get(resources.node.names.latest).on(addFeed);
+    //         //currentUser.node.tweets.get(resources.node.names.delete).on(removeFromFeed);
 
-            if(--currentLevel < 0)
-                return;  
+    //         if(--currentLevel < 0)
+    //             return;  
 
-            currentUser.node.follow.map().on((value, key) => {
-                if(key && userFound[key])
-                    return; // Do not process the same user twice.
+    //         currentUser.node.follow.map().on((value, key) => {
+    //             if(key && userFound[key])
+    //                 return; // Do not process the same user twice.
 
-                // Use value.level to check if follow should be done. Advanced version.
+    //             // Use value.level to check if follow should be done. Advanced version.
 
-                const followUser = getUserContainerById(key);
-                loadFeed(followUser, currentLevel);
-            });
-        }
+    //             const followUser = getUserContainerById(key);
+    //             loadFeed(followUser, currentLevel);
+    //         });
+    //     }
 
-        loadFeed(userContainer, 1); // Follow max one level out
-    };
+    //     loadFeed(userContainer, 1); // Follow max one level out
+    // };
 
-    function initializeTrust(userContainer, maxlevel = 1) {
+    async function initializeRelationships(loggedInUser, maxDegree = 1) {
         console.log(`Subscribing to users Trust - GUN Style`);
         const userFound = {}; // Make sure only to process the user once.
 
-        const getUser = (key) => users[key] ||  
-        (user[key] = Object.assign({}, users[key], 
-            { id: key, trust: {}, trustedBy: {}, confirm: {}, confirmedBy: {} }));
-        
-        const getItem = (key) => feedIndex[key] || (feedIndex[key] = { confirmedBy: {} });
+        console.log("initializeRelationships: "+loggedInUser.id);
+        // Get a slim user object and not the full container 
+        const getUser = (key) => users[key] ||  (users[key] = Object.assign({}, users[key], { id: key, relationshipBy: {}, relationships: {} }));
+        const getItem = (key) => feedIndex[key] || (feedIndex[key] = { claimedBy: {} });
 
-        function load(currentUser, currentLevel) 
+        function addClaim(claim, key, userId, localDegree) {
+            const item = getItem(key);
+            claim.localDegree = localDegree;
+            item.claimedBy[userId] = claim;
+        }
+
+        function addRelationship(relationship, key, user, degree) {
+            const localUser = getUser(key);
+            
+            relationship.localDegree = degree;
+
+
+            // let action = localUser.relationshipBy[relationship.action || "unknown"];
+            // if(!action)
+            //     action = localUser.relationshipBy[relationship.action  || "unknown"] = {};
+            
+            // action[user.id] = relationship; // Make revese index based on degree, easy to resolve when calculating the merit score.
+
+            localUser.relationshipBy[user.id] = relationship;
+            user.relationships[localUser.id] = relationship;
+
+            return localUser;
+        }
+
+
+        async function load(currentUser, currentDegree) 
         {
-            userFound[currentUser.id] = true;
+            console.log("initializeRelationships - load: "+currentUser.id);
+
+            userFound[currentUser.id] = true; // Make sure that not to process the same user twice
             
-            if(--currentLevel < 0)
+            if(--currentDegree < 0) 
                 return;  
-            
-            if(!currentUser.node)
+
+            const localDegree = maxDegree - currentDegree;
+
+            if(!currentUser.node) // If the user object is a slim version, load the full version.
                 currentUser = getUserContainerById(currentUser.id);
 
-            currentUser.node.trust.map().on((data, key) => {
-                const localUser = getUser(key);
-                localUser.trustedBy[currentUser.id] = data;
-                //localUser.trustCount = (localUser.trustCount) ? localUser.trustCount + 1 : 1;
-                //currentUser.trust[key] = localUser; // Do we need this one?
+            // Get all new tweets
+            currentUser.node.tweetsMetadata.get(resources.node.names.latest).on(addFeed);
 
-                if(!userFound[key])
-                    load(localUser, currentLevel);
-            });
+            // Subscribe to claims
+            currentUser.node.claimsMetadata.get(resources.node.names.latest).on((v,k) => addClaim(v,k, currentUser.id, localDegree)); // Load the latest tweet from the user.
+            // Load claims first!
+            const claimTree = currentUser.node.claims; // relationships is of Type DateTree
+            for await (let [month] of claimTree.iterate({ order: -1 })) {
 
-            currentUser.node.confirm.map().on((data, soul) => {
-                const item = getItem(soul);
-                item.confirmedBy[currentUser.id] = data;
-                //currentUser.confirm[soul] = item;
+                month.once().map().once((claim, key) => {
+                    addClaim(claim, key, currentUser.id, localDegree);
+                });
+            }
+
+            // Subscribe to Relationships
+            //currentUser.node.relationshipsMetadata.get(resources.node.names.latest).on((v,k) => addRelationship(v, k, currentUser, localDegree));
+            // Load relationships
+            currentUser.node.relationships.map().on((relationship, key) => {
+
+                const targetUserId = (key[0] === '~') ? key.substring(1) : key;
+                const targetUser = addRelationship(relationship, targetUserId, currentUser, localDegree);
+
+                if(userFound[targetUserId])
+                    return;
+
+                if(relationship.action === 'follow') {
+                    targetUser.node.tweetsMetadata.get(resources.node.names.latest).on(addFeed); // Load the latest tweet from the user.
+                }
+
+                if(relationship.action === 'trust') { 
+                    const degree = (relationship.degree && relationship.degree < currentDegree) ? relationship.degree: currentDegree; // Do not go futher than the relationship degree indicates.
+                    load(targetUser, degree); 
+                }
             });
         }
 
-        load(userContainer, maxlevel); // Follow max one level out
+        load(loggedInUser, maxDegree); // Follow max one level out
     }
 
 
@@ -405,7 +458,7 @@ const UserProvider = (props) => {
 
 
     
-    const onAuth = React.useCallback(() => {
+    const onAuth = React.useCallback(async () => {
         setIsLoggedIn(true);
         const user = gun.user();
         setGunUser(user);
@@ -414,10 +467,10 @@ const UserProvider = (props) => {
         // Load the profile on to dpeepUser
         loadProfile(userContainer);
         setUser(userContainer);
-        initializeFeed(userContainer);
-        initializeTrust(userContainer);
+        //initializeFeed(userContainer);
+        initializeRelationships(userContainer);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [setIsLoggedIn, setGunUser, getUserContainer, loadProfile, setUser, initializeFeed ]);
+    }, [setIsLoggedIn, setGunUser, getUserContainer, loadProfile, setUser ]); //, initializeFeed
 
 
     const loadFeed = React.useCallback(() => {
@@ -444,8 +497,12 @@ const UserProvider = (props) => {
 
 
     useEffect(()=> {
-        if(authenticate)
-            onAuth();
+        if(authenticate) {
+            (async () => {
+                onAuth();
+            })();
+        }
+            
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [authenticate])
 

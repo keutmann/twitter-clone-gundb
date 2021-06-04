@@ -1,10 +1,10 @@
-import React, { useEffect } from "react";
+import React from "react";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
 import moment from "moment";
 import AvatarIdenticon from "../AvatarIdenticon";
 import DeleteComment from "./DeleteComment";
-import useUser  from '../../hooks/useUser';
+//import useUser  from '../../hooks/useUser';
 import Confirm from "../Message/Confirm";
 import useProfile from '../../hooks/useProfile';
 

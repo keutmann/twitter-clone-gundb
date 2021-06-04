@@ -20,20 +20,29 @@ const Wrapper = styled.div`
 
 
 const WhoToFollow = () => {
-	const { user, gun, getUserContainerById} = useUser();
+	const { user: loggedInUser, gun, getUserContainerById} = useUser();
 
 	const [ list, setList ] = useState(null);
 
+
+
 	useEffect(() => {
+
 		(async () => {
 			const availableUsers = await gun.get(resources.node.names.dpeep).get(resources.node.names.userIndex).once(p=>p, {wait:0}).then() || {};
-			const userFollows = await user.node.follow.once(p=>p,{wait:0}).then() || {};
 			
-			const allUsers = Object.keys(availableUsers).filter(key => key !== '_' && key !== user.id && availableUsers[key]).map(key => {
+			const allUsers = Object.keys(availableUsers).filter(key => key !== '_' && key !== loggedInUser.id && availableUsers[key]).map(key => {
 				const keyUser = getUserContainerById(key);
-				
-				keyUser.isFollowing = !(!userFollows[key]);
-				keyUser.isSelf = (key === user.id);
+
+				keyUser.isFollowing = false;
+				keyUser.isSelf = (key === loggedInUser.id);
+
+				// TODO: Implement multiple degrees
+				const relationship = keyUser.relationshipBy[loggedInUser.id]; // Base degree only
+				if(relationship) {
+					keyUser.isFollowing = relationship.action === "trust" || relationship.action === "follow";
+					keyUser.relationship = relationship;
+				}
 
 				return keyUser;	
 			} );

@@ -2,13 +2,16 @@ import React from "react";
 import Button from "../../styles/Button";
 import useFollow from "../../hooks/useFollow";
 
+
 const Follow = ({ user, sm = false, relative = false }) => {
 
-  const [followState, setFollow] = useFollow(user);
+  const [followState, setFollowState] = useFollow(user);
+
+  const isFollowing =  followState === "trust" || followState === "follow";
 
   return (
-    <Button outline={!followState} sm={sm} relative={relative} onClick={setFollow}>
-      {followState ? "Following" : "Follow"}
+    <Button outline={!isFollowing} sm={sm} relative={relative} onClick={setFollowState}>
+      {isFollowing ? "Following" : "Follow"}
     </Button>
   );
 };
