@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import styled from "styled-components";
 import useUserChanged from "../../hooks/useUserChanged";
 // import useUser from "../../hooks/useUser";
@@ -22,36 +22,23 @@ const Wrapper = styled.div`
 
 const Degree = ({ user }) => {
 
-    //const { theme } = useContext(ThemeContext);
     const [,] = useUserChanged(user);
-
-    // const [, setRender] = useState();
 
     function clickHandler() {
       // Open Visual Graph
       //setNumber(number+1);
     }
-
-    // useEffect(() => {
-
-    //   console.log("Degree -> useEffect called");
-    //   user.calculateState();
-    //   setRender();
-
-    // // eslint-disable-next-line react-hooks/exhaustive-deps
-    // }, [user.relationshipChanged]);
-  
-  
-
          
     const color = user.localState.color;
     const title = `Trust: ${user.score.trust} - Follow: ${user.score.follow} - Neutral: ${user.score.neutral} - Mute: ${user.score.mute} - Block: ${user.score.block}`;
-    //const number = user.localState.score;
-    const degree = user.localState.degree;
+    var number = user.localState.degree + 1;
+
+    if(user.localState.name === "neutral")
+      return null;
 
   return (
     <Wrapper onClick={clickHandler} title={title} stateColor={color} titel={title}>
-        { degree }
+        {number}
     </Wrapper>
   );
 };

@@ -1,5 +1,4 @@
 import { DateTree } from "gun-util";
-import { HandThumbsDown } from "react-bootstrap-icons";
 import { DispatcherEvent } from "./DispatcherEvent";
 import resources from "./resources";
 
@@ -41,8 +40,6 @@ export class UserContainer {
         this.relationshipChanged = 0;
         this.score = this.scoreInit();
         this.onChange = new DispatcherEvent("onChange");
-        //this.calculateState = this.calculateState2;
-
     }
 
     test() {
@@ -61,11 +58,11 @@ export class UserContainer {
 
     getColors() {
         let colors = [
-            { score: this.score.neutral, color: "", name: "neutral" },
-            { score: this.score.trust, color: "purple", name: "trust" },
-            { score: this.score.follow, color: "green", name: "follow" },
-            { score: this.score.mute, color: "yellow", name: "mute" },
-            { score: this.score.block, color: "black", name: "block" }
+            { score: this.score.neutral, color: "", name: "neutral", degree: 0 },
+            { score: this.score.trust, color: "purple", name: "trust", degree: 0 },
+            { score: this.score.follow, color: "green", name: "follow", degree: 0 },
+            { score: this.score.mute, color: "yellow", name: "mute", degree: 0 },
+            { score: this.score.block, color: "black", name: "block", degree: 0 }
         ];
         return colors;
     }
@@ -97,10 +94,11 @@ export class UserContainer {
     }
 
     calculateState() {
-        this.localState.degree = this.calculateScore();
+        let degree = this.calculateScore();
 
         let colors = this.getColors();
         this.localState = colors.sort((a, b) => b.score - a.score)[0];
+        this.localState.degree = degree;
     }
 
 }
