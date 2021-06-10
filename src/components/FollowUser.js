@@ -5,6 +5,8 @@ import Follow from "./Profile/Follow";
 import Button from "../styles/Button";
 import AvatarIdenticon from "./AvatarIdenticon";
 import useProfile from '../hooks/useProfile';
+import Degree from './Buttons/Degree';
+import ProfileMenu from './Profile/ProfileMenu'
 
 
 const UserWrapper = styled.div`
@@ -63,7 +65,12 @@ const FollowUser = ({ id, followUser }) => {
 		</div>
 
 		{!followUser.isSelf ? (
-			<Follow sm user={followUser} />
+			<React.Fragment>
+				<Follow sm user={followUser} />
+				<Degree user={followUser}></Degree>
+				<ProfileMenu user={followUser}></ProfileMenu>
+
+			</React.Fragment>
 		) : (
 			<Link to="/settings/profile">
 				<Button sm outline className="action-btn">

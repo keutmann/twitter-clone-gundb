@@ -10,10 +10,9 @@ import 'gun/lib/then';
 // import Rad from 'gun/lib/radisk'; 
 // import Radix from 'gun/lib/radix'; 
 
-//import { createTweetContainer } from '../utils';
-import { DateTree } from 'gun-util';
-
 import { sha256 } from '../utils/crypto';
+import { UserContainer } from '../utils/UserContainer';
+
 
 
 
@@ -28,26 +27,26 @@ UserContext.displayName = 'userContext';
 const UserProvider = (props) => {
 
     Gun.on('opt', function (context) {
-        if (context.once) 
+        if (context.once)
             return
-        
+
         // Pass to subsequent opt handlers
         this.to.next(context)
-      
+
         const { isValid } = context.opt
-      
+
         if (isValid) {
             // Check all incoming traffic
             context.on('in', function (msg) {
-                if (msg.put && !isValid(msg)) 
+                if (msg.put && !isValid(msg))
                     return;
 
                 this.to.next(msg)
             })
         }
-      });
+    });
 
-      
+
 
     const [gun] = useState(Gun({ peers: serverpeers, isValid: isValidUser })); //{ peers: serverpeers, localStorage: false }{peers: ["http://server-ip-or-hostname:8080/gun"]}
     const [gunUser, setGunUser] = useState(null);
@@ -69,7 +68,7 @@ const UserProvider = (props) => {
     // Verify that a user is not banned from adding data into local database.
     function isValidUser(msg) {
         let userId = Object.keys(msg.put).filter(k => k[0] === '~').map(k => k.split('/').shift()).shift();
-        if(userId && usersBan[userId])
+        if (userId && usersBan[userId])
             return false;
 
         return true;
@@ -151,58 +150,18 @@ const UserProvider = (props) => {
     }, [gunUser]);
 
 
+
+
+
     const getUserContainer = React.useCallback(
         (gunUser) => {
 
-            let pub = (gunUser.is) ? gunUser.is.pub : gunUser["_"]["soul"];
-            const pubId = (pub[0] === '~') ? pub.substring(1) : pub;
+            let userContainer = new UserContainer(gunUser);
 
-            const dpeep = gunUser.get(resources.node.names.dpeep);
-            const profile = dpeep.get(resources.node.names.profile);
-            // The DateTree root has to be clean of other properties not related to DateTree. Or iteration will fail etc.
-            const tweets = new DateTree(dpeep.get(resources.node.names.tweets), 'millisecond'); 
-            const tweetsMetadata = dpeep.get(resources.node.names.tweetsMetadata);
+            let pubId = userContainer.id;
+            users[pubId] = userContainer;
 
-            const relationships = dpeep.get(resources.node.names.relationships);
-            const relationshipsMetadata = dpeep.get(resources.node.names.relationshipsMetadata);
-
-            const claims = new DateTree(dpeep.get(resources.node.names.claims), 'month'); // Combine all claims into one month batch, estimated best performance. 
-            const claimsMetadata = dpeep.get(resources.node.names.claimsMetadata);
-
-            // Options
-            // ---------------
-            // Trust- x levels
-            //  - Users
-            //  - Tweets
-            //  - Comments
-            // Distrust
-            //  - (Repeat categories.. etc )
-            // Confirm
-            //  - (Repeat categories.. etc )
-            // Reject
-            // Follow - x levels Users only
-            // Block - single
-            // Mute - single
-
-            //const treeRoot = tweets.get('treeRoot');
-            
-            const node = { 
-                user: gunUser, 
-                tweets, 
-                tweetsMetadata,
-                profile, 
-                dpeep,
-                // people,
-                // peopleMetadata,
-                relationships,
-                relationshipsMetadata,
-                claims,
-                claimsMetadata
-             };
-            const container = { id: pubId, node, relationshipBy: {}, relationships: {} };
-            users[pubId] = Object.assign({}, users[pubId], container);
-
-            return users[pubId];
+            return userContainer;
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [users]
@@ -210,18 +169,31 @@ const UserProvider = (props) => {
 
     const getUserContainerById = React.useCallback(
         (pubId) => {
-            const user = users[pubId]; 
+            if (pubId[0] === '~')
+                pubId = pubId.substring(1);
+
+            const user = users[pubId];
             if (user && user.node) return user; // Just return an exiting container is exist and node is set
 
-            const cleanPubID = pubId[0] === '~' ? pubId.substring(1) : pubId;
-            const gunUser = gun.user(cleanPubID);
+            const gunUser = gun.user(pubId);
 
             return getUserContainer(gunUser); // Create a new one
         },
         [gun, users, getUserContainer]
     );
 
-    const createContainer =  React.useCallback( (data) => {
+    // A slim user object, optimized for performance
+    const getSlimUser = React.useCallback(
+        (userId) => {
+            return getUserContainerById(userId);
+
+            //return users[userId] || (users[userId] = Object.assign({}, users[userId], { id: userId }, relationshipUserObj()));
+        },
+        [getUserContainerById]
+    );
+
+
+    const createContainer = React.useCallback((data) => {
         const soul = Gun.node.soul(data);
         const soulElem = soul.split('/');
 
@@ -241,10 +213,10 @@ const UserProvider = (props) => {
             confirmedBy: {}
         }
         return item;
-        },
+    },
         [getUserContainerById]
     );
-    
+
 
     const userSignUp = React.useCallback(
         async (signedUpData) => {
@@ -270,7 +242,7 @@ const UserProvider = (props) => {
     const loadProfile = React.useCallback(
         (user, cb) => {
 
-            if(!user.profile) {
+            if (!user.profile) {
                 const preProfile = {
                     handle: `${user.id.substring(0, 4)}...${user.id.substring(user.id.length - 4, user.id.length)}`,
                     username: 'Anonymous',
@@ -279,7 +251,7 @@ const UserProvider = (props) => {
 
                 user.profile = Object.assign({}, resources.node.profile, preProfile);
             }
-            if(cb && user.profile.auto) {
+            if (cb && user.profile.auto) {
                 user.profile.auto = false;
                 user.node.profile.once((val) => {
                     user.profile = Object.assign({}, user.profile, val);
@@ -295,11 +267,11 @@ const UserProvider = (props) => {
 
     // Methods ----------------------------------------------------------------------
     const addFeed = React.useCallback(data => {
-        if(!data) // Data is null, we need to remove it from feed!? But what id?
+        if (!data) // Data is null, we need to remove it from feed!? But what id?
             return;
 
         const item = createContainer(data);
-        if(feedIndex[item.soul])
+        if (feedIndex[item.soul])
             return true;
 
         feedIndex[item.soul] = item; // Use index, so the data only gets added to the feed once.
@@ -309,67 +281,28 @@ const UserProvider = (props) => {
 
     }, [createContainer, feedIndex, feedReady]); // User here is the viewer
 
-    // const removeFromFeed = React.useCallback((soul, key) => {
-    //     if(!soul) // Data is null, we need to remove it from feed!? But what id?
-    //         return false;
+    // eslint-disable-next-line no-unused-vars
+    const removeFromFeed = React.useCallback((soul, key) => {
+        if (!soul) // Data is null, we need to remove it from feed!? But what id?
+            return false;
 
-    //     if(!feedIndex[soul])
-    //         return false;
+        if (!feedIndex[soul])
+            return false;
 
-    //     delete feedIndex[soul];
-    //     delete feedReady[soul];
-    //     setMessageReceived(soul);
+        delete feedIndex[soul];
+        delete feedReady[soul];
+        setMessageReceived(soul);
 
-    //     return true;
+        return true;
 
-    // }, [feedReady, feedIndex]); // User here is the viewer
-
-
-    // const initializeFeed = (userContainer) => {
-    //     console.log("Subscribing to users feed - GUN Style");
-    //     const userFound = {}; // Make sure only to process the user once.
-
-    //     function loadFeed(currentUser, currentLevel) 
-    //     {
-    //         userFound[currentUser.id] = true;
-
-    //         const latest = currentUser.node.tweets.latest();
-    //         latest?.then((arr) => {
-    //             let [latestRef] = arr;
-    //             if(!latestRef) return;
-    //             latestRef.then( item => {
-    //                 addFeed(item);
-    //             });
-    //         })
-
-    //         currentUser.node.tweetsMetadata.get(resources.node.names.latest).on(addFeed);
-    //         //currentUser.node.commentsMetadata.get(resources.node.names.latest).on(addFeed);
-    //         //currentUser.node.tweets.get(resources.node.names.delete).on(removeFromFeed);
-
-    //         if(--currentLevel < 0)
-    //             return;  
-
-    //         currentUser.node.follow.map().on((value, key) => {
-    //             if(key && userFound[key])
-    //                 return; // Do not process the same user twice.
-
-    //             // Use value.level to check if follow should be done. Advanced version.
-
-    //             const followUser = getUserContainerById(key);
-    //             loadFeed(followUser, currentLevel);
-    //         });
-    //     }
-
-    //     loadFeed(userContainer, 1); // Follow max one level out
-    // };
+    }, [feedReady, feedIndex]); // User here is the viewer
 
     async function initializeRelationships(loggedInUser, maxDegree = 1) {
         console.log(`Subscribing to users Trust - GUN Style`);
         const userFound = {}; // Make sure only to process the user once.
 
-        console.log("initializeRelationships: "+loggedInUser.id);
+        console.log("initializeRelationships: " + loggedInUser.id);
         // Get a slim user object and not the full container 
-        const getUser = (key) => users[key] ||  (users[key] = Object.assign({}, users[key], { id: key, relationshipBy: {}, relationships: {} }));
         const getItem = (key) => feedIndex[key] || (feedIndex[key] = { claimedBy: {} });
 
         function addClaim(claim, key, userId, localDegree) {
@@ -378,86 +311,129 @@ const UserProvider = (props) => {
             item.claimedBy[userId] = claim;
         }
 
-        function addRelationship(relationship, key, user, degree) {
-            const localUser = getUser(key);
-            
-            relationship.localDegree = degree;
+        function addRelationship(relationship, targetUser, parentUser, degree) {
 
+            if (!targetUser.relationshipBy[degree]) targetUser.relationshipBy[degree] = {};
+            targetUser.relationshipBy[degree][parentUser.id] = relationship;
 
-            // let action = localUser.relationshipBy[relationship.action || "unknown"];
-            // if(!action)
-            //     action = localUser.relationshipBy[relationship.action  || "unknown"] = {};
-            
-            // action[user.id] = relationship; // Make revese index based on degree, easy to resolve when calculating the merit score.
+            targetUser.relationshipChanged += 1; // Used to indicate that a new calculation of score for the user should be done before display. 
 
-            localUser.relationshipBy[user.id] = relationship;
-            user.relationships[localUser.id] = relationship;
+            parentUser.relationships[targetUser.id] = relationship;
 
-            return localUser;
+            return targetUser;
         }
 
-
-        async function load(currentUser, currentDegree) 
-        {
-            console.log("initializeRelationships - load: "+currentUser.id);
-
-            userFound[currentUser.id] = true; // Make sure that not to process the same user twice
-            
-            if(--currentDegree < 0) 
-                return;  
-
-            const localDegree = maxDegree - currentDegree;
-
-            if(!currentUser.node) // If the user object is a slim version, load the full version.
-                currentUser = getUserContainerById(currentUser.id);
-
-            // Get all new tweets
-            currentUser.node.tweetsMetadata.get(resources.node.names.latest).on(addFeed);
-
-            // Subscribe to claims
-            currentUser.node.claimsMetadata.get(resources.node.names.latest).on((v,k) => addClaim(v,k, currentUser.id, localDegree)); // Load the latest tweet from the user.
-            // Load claims first!
-            const claimTree = currentUser.node.claims; // relationships is of Type DateTree
-            for await (let [month] of claimTree.iterate({ order: -1 })) {
-
-                month.once().map().once((claim, key) => {
-                    addClaim(claim, key, currentUser.id, localDegree);
+        function removeRelationship(targetUser, parentUser) {
+            const existingRelationship = parentUser.relationships[targetUser.id];
+            if (existingRelationship) {
+                targetUser.relationshipBy.forEach(element => {
+                    if (element.hasOwnProperty(parentUser.id))
+                        delete element[parentUser.id]; // Remove relationship
                 });
+                delete parentUser.relationships[targetUser.id]; // Remove relationship
+                targetUser.relationshipChanged += 1; // Indicate that a new calculation of localState should be done before display.
+            }
+            return existingRelationship;
+        }
+
+        function unsubscribe(currentUser, targetUser, existingRelationship) {
+
+
+            if (existingRelationship.action === 'trust' || existingRelationship.action === 'follow') {
+                targetUser.node.tweetsMetadata.get(resources.node.names.latest).off(); // Unsubscibe from the latest tweet by the user.
             }
 
-            // Subscribe to Relationships
-            //currentUser.node.relationshipsMetadata.get(resources.node.names.latest).on((v,k) => addRelationship(v, k, currentUser, localDegree));
-            // Load relationships
-            currentUser.node.relationships.map().on((relationship, key) => {
+            if (existingRelationship.action === 'trust') {
+                targetUser.node.claimsMetadata.get(resources.node.names.latest).off();
+                feedIndex.forEach(element => {
+                    delete element.claimedBy[targetUser.id];
+                    element.claimsChanged = true;
+                }); // Remove all claims
+            }
+            // If Trust then go though all relations to recalculate their new localState
 
-                const targetUserId = (key[0] === '~') ? key.substring(1) : key;
-                const targetUser = addRelationship(relationship, targetUserId, currentUser, localDegree);
 
-                if(userFound[targetUserId])
-                    return;
+            // if(targetUser.state && targetUser.state !== resources.node.names.neutral) {
 
-                if(relationship.action === 'follow') {
-                    targetUser.node.tweetsMetadata.get(resources.node.names.latest).on(addFeed); // Load the latest tweet from the user.
+            // }
+        }
+
+        async function subscribe(targetUser, relationship, localDegree) {
+            if (relationship.action === 'follow' || relationship.action === 'trust') {
+                targetUser.node.tweetsMetadata.get(resources.node.names.latest).on(addFeed); // Load the latest tweet from the user.
+            }
+
+            if (relationship.action === 'trust') {
+                // Subscribe to claims
+                targetUser.node.claimsMetadata.get(resources.node.names.latest).on((v, k) => addClaim(v, k, targetUser.id, localDegree)); // Load the latest tweet from the user.
+                // Load claims first!
+                const claimTree = targetUser.node.claims; // relationships is of Type DateTree
+                for await (let [month] of claimTree.iterate({ order: -1 })) {
+
+                    month.once().map().once((claim, key) => {
+                        addClaim(claim, key, targetUser.id, localDegree);
+                    });
                 }
+            }
 
-                if(relationship.action === 'trust') { 
-                    const degree = (relationship.degree && relationship.degree < currentDegree) ? relationship.degree: currentDegree; // Do not go futher than the relationship degree indicates.
-                    load(targetUser, degree); 
+        }
+
+        async function load(currentUser, currentDegree) {
+            console.log("initializeRelationships - load: " + currentUser.id);
+
+            const localDegree = maxDegree - currentDegree;
+            userFound[currentUser.id] = localDegree; // Make sure that not to process the same user twice
+
+            if (--currentDegree < 0)
+                return;
+
+            if (!currentUser.node) // If the user object is a slim version, load the full version.
+                currentUser = getUserContainerById(currentUser.id);
+
+            // Load relationships - map() automatically subscibes to changes in the relationship node
+            currentUser.node.relationships.map().on((relationship, key) => {
+                if (key[0] !== '~') return; // Ignore noice data from the relationships node, only process users.
+
+                const targetUser = getSlimUser(key);
+
+                const existingRelationship = removeRelationship(targetUser, currentUser);
+                if (existingRelationship)
+                    // Unsubscribe any existing relationship
+                    unsubscribe(currentUser, targetUser, existingRelationship);
+
+
+                addRelationship(relationship, targetUser, currentUser, localDegree);
+                // Subscribe to events 
+                subscribe(currentUser, targetUser, relationship, localDegree);
+
+                targetUser.calculateState();
+                targetUser.onChange.fire(targetUser.relationshipChanged);
+
+                if (relationship.action === 'trust') {
+                    if (userFound[targetUser.id])
+                        return; // We have already processed this user, do not reprocess
+
+                    // Do not go futher than the relationship degree indicates. The relationhip degree may be lower than the currentDegree.
+                    const degree = (relationship?.degree < currentDegree) ? relationship.degree : currentDegree;
+                    load(targetUser, degree);
                 }
             });
         }
+
+        // Subscribe to one self
+        subscribe(loggedInUser, { action: "trust" }, 0);
 
         load(loggedInUser, maxDegree); // Follow max one level out
     }
 
 
     const resetFeedReady = React.useCallback(() => {
-        Object.keys(feedReady).forEach(p=> delete feedReady[p]);
+        Object.keys(feedReady).forEach(p => delete feedReady[p]);
         setMessageReceived(null);
     }, [feedReady]);
 
 
-    
+
     const onAuth = React.useCallback(async () => {
         setIsLoggedIn(true);
         const user = gun.user();
@@ -470,22 +446,22 @@ const UserProvider = (props) => {
         //initializeFeed(userContainer);
         initializeRelationships(userContainer);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [setIsLoggedIn, setGunUser, getUserContainer, loadProfile, setUser ]); //, initializeFeed
+    }, [setIsLoggedIn, setGunUser, getUserContainer, loadProfile, setUser]); //, initializeFeed
 
 
     const loadFeed = React.useCallback(() => {
         let temp = feed || [];
-  
+
         const items = Object.values(feedReady);
-        if(items.length > 0) {
-          setFeed([...items, ...temp]); // Simply copy ready feed, more advanced sorting on date etc. may be implemented.
-          resetFeedReady();
-          return true;
+        if (items.length > 0) {
+            setFeed([...items, ...temp]); // Simply copy ready feed, more advanced sorting on date etc. may be implemented.
+            resetFeedReady();
+            return true;
         }
-  
-        if(feed)  // No new messages but we have a feed already
-          return true;
-  
+
+        if (feed)  // No new messages but we have a feed already
+            return true;
+
         return false;
     }, [feed, feedReady, setFeed, resetFeedReady]);
 
@@ -496,14 +472,14 @@ const UserProvider = (props) => {
     });
 
 
-    useEffect(()=> {
-        if(authenticate) {
+    useEffect(() => {
+        if (authenticate) {
             (async () => {
                 onAuth();
             })();
         }
-            
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [authenticate])
 
 
@@ -520,30 +496,30 @@ const UserProvider = (props) => {
     // One time only effect 
     useEffect(() => {
         if (isLoggedIn) {
-          console.log(`User loggedIn`);
-          return;
+            console.log(`User loggedIn`);
+            return;
         }
-    
+
         // Auto signin the user if keys exist in sessionStorage
         const keysString = sessionStorage.getItem(dpeepUserKeys);
-        if(keysString && keysString.length > 2) {
-          const keys = JSON.parse(keysString);
-          if(keys)
-            login(keys);
+        if (keysString && keysString.length > 2) {
+            const keys = JSON.parse(keysString);
+            if (keys)
+                login(keys);
         }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      }, []);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const value = React.useMemo(
         () => ({
-            user, users, gun, isLoggedIn, feed, feedIndex, feedReady, messageReceived, userSignUp, loginPassword, 
+            user, gun, isLoggedIn, feed, feedIndex, feedReady, messageReceived, userSignUp, loginPassword,
             logout, setFeed, getUserContainerById,
             loadProfile, followUser, setMessageReceived, resetFeedReady, loadFeed,
             createContainer
         }),
         [
-            user, users, gun, isLoggedIn, feed, feedIndex, feedReady, messageReceived, 
-            userSignUp, loginPassword, logout, setFeed, getUserContainerById, 
+            user, gun, isLoggedIn, feed, feedIndex, feedReady, messageReceived,
+            userSignUp, loginPassword, logout, setFeed, getUserContainerById,
             loadProfile, followUser, setMessageReceived, resetFeedReady, loadFeed,
             createContainer
         ]
@@ -553,4 +529,3 @@ const UserProvider = (props) => {
 };
 
 export { UserProvider, UserContext };
-

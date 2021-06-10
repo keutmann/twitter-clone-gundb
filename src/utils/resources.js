@@ -24,7 +24,8 @@ const resources = {
                 delete: "delete",
                 next: "next",
                 comments: "comments",
-                userIndex: "userIndex"
+                userIndex: "userIndex",
+                neutral: "neutral"
 
             },
             envelope: {

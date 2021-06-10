@@ -1,8 +1,6 @@
 import React, { useState } from "react";
-//import { useMutation } from "@apollo/react-hooks";
 import { toast } from "react-toastify";
 import { RetweetIcon, RtFillIcon } from "../Icons";
-// import { TOGGLE_RETWEET } from "../../queries/tweet";
 import { displayError } from "../../utils";
 
 const Retweet = ({ id, isRetweet, retweetsCount }) => {

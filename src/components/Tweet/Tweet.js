@@ -7,7 +7,7 @@ import ConfirmReject from "../Message/ConfirmReject";
 import Retweet from "./Retweet";
 import { CommentIcon } from "../Icons";
 import AvatarIdenticon from "../AvatarIdenticon";
-import TweetMenu from './TweetMenu'
+import ProfileMenu from '../Profile/ProfileMenu'
 import useProfile from '../../hooks/useProfile';
 
 const Wrapper = styled.div`
@@ -29,7 +29,7 @@ const Wrapper = styled.div`
   }
 
   .tweet-info-user div.menu {
-    align-items: right;
+    float: right;
   }
 
 
@@ -118,7 +118,7 @@ const Tweet = ({ item }) => {
             <span className="secondary">- {moment(item.data.createdAt).fromNow()}</span>
           </Link>
           <div className="menu">
-            <TweetMenu item={item}></TweetMenu>
+            <ProfileMenu user={item.owner}></ProfileMenu>
           </div>
         </div>
 

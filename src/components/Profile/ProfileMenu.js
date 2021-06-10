@@ -8,7 +8,16 @@ import BlockUser from "../MenuItems/BlockUser";
 import AnalyseGraph from "../MenuItems/AnalyseGraph";
 
 const Wrapper = styled.div`
+
+  vertical-align: text-top;
+
   .btn {
+    cursor: pointer;
+  }
+
+  .threedotsRow {
+    vertical-align: text-top;
+    font-size: 20px;
     cursor: pointer;
   }
 
@@ -22,13 +31,14 @@ const Wrapper = styled.div`
 const TweetMenuBtn = React.forwardRef(({ open, ...props }, ref) => {
   return (
     <div ref={ref} {...props}>
-     <span className="threedots" ></span>
+     {/* <span className="threedots" >...</span> */}
+     <span className="threedotsRow" >...</span>
     </div>
   );
 });
 
 
-const TweetMenu = ({ item }) => {
+const ProfileMenu = ({ user }) => {
   const theme = useContext(ThemeContext);
 
   const contentStyle = {
@@ -54,13 +64,13 @@ const TweetMenu = ({ item }) => {
         overlayStyle={overlayStyle}
         arrow={false}
       >
-        <FollowUser user={ item.owner } />
-        <MuteUser user={ item.owner } />
-        <BlockUser user={ item.owner } />
-        <AnalyseGraph user={ item.owner }/>
+        <FollowUser user={ user } />
+        <MuteUser user={ user } />
+        <BlockUser user={ user } />
+        <AnalyseGraph user={ user }/>
       </Popup> 
     </Wrapper>
   );
 };
 
-export default TweetMenu;
+export default ProfileMenu;

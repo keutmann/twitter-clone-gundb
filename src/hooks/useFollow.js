@@ -39,17 +39,18 @@ const useFollow = (user) => {
 
   useEffect(() => {
 
+    console.log("useFollow -> useEffect called");
     // Load relationship, even that is may be in the users relationshipBy, but because of race condition load it from Gun. 
     const relationshipNode = loggedInUser.node.relationships.get('~'+user.id);
     setNode(relationshipNode);
 
     relationshipNode.once((data, key) => {
-      setFollow((data && data["action"]) || "none"); // Fail safe for missing action property
+      setFollow((data && data["action"]) || "neutral"); // Fail safe for missing action property
     }, {wait: 100});
 
     // Default setup
     relationshipNode.not(function(key) { 
-      setFollow("none");
+      setFollow("neutral");
     });
   
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -57,7 +58,7 @@ const useFollow = (user) => {
 
   const setFollowState = async () => {
 
-    let state = (followState === "none") ? "follow" : "none";
+    let state = (followState === "neutral") ? "follow" : "neutral";
 
     node.get("action").put(state);
 
