@@ -1,8 +1,6 @@
 import React from "react";
 import styled from "styled-components";
 import useUserChanged from "../../hooks/useUserChanged";
-// import useUser from "../../hooks/useUser";
-// import { ThemeContext } from "../../context/ThemeContext";
 
 const Wrapper = styled.div`
   border: 1px solid ${(props) => props.theme.secondaryColor};

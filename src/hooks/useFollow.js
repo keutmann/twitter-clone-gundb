@@ -40,6 +40,7 @@ const useFollow = (user) => {
   useEffect(() => {
 
     console.log("useFollow -> useEffect called");
+    if(!user) return;
     // Load relationship, even that is may be in the users relationshipBy, but because of race condition load it from Gun. 
     const relationshipNode = loggedInUser.node.relationships.get('~'+user.id);
     setNode(relationshipNode);

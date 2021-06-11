@@ -72,9 +72,3 @@ export const instantiateNewGun = (Gun, opts) => () => {
 //   }
 //   return item;
 // };
-
-export const getProfileValues = (userid, profile) => {
-  const handle = (profile && profile.handle) || `${userid.substring(0,4)}...${userid.substring(userid.length - 4, userid.length)}`;
-  const displayname =(profile &&  profile.displayname) || "Anonymous";
-  return { userid, handle, displayname };
-}

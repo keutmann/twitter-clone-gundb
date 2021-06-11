@@ -239,29 +239,29 @@ const UserProvider = (props) => {
 
     }, [isLoggedIn, user, gun]);
 
-    const loadProfile = React.useCallback(
-        (user, cb) => {
+    // const loadProfile = React.useCallback(
+    //     (user, cb) => {
 
-            if (!user.profile) {
-                const preProfile = {
-                    handle: `${user.id.substring(0, 4)}...${user.id.substring(user.id.length - 4, user.id.length)}`,
-                    username: 'Anonymous',
-                    auto: true
-                };
+    //         if (!user.profile) {
+    //             const preProfile = {
+    //                 handle: `${user.id.substring(0, 4)}...${user.id.substring(user.id.length - 4, user.id.length)}`,
+    //                 username: 'Anonymous',
+    //                 auto: true
+    //             };
 
-                user.profile = Object.assign({}, resources.node.profile, preProfile);
-            }
-            if (cb && user.profile.auto) {
-                user.profile.auto = false;
-                user.node.profile.once((val) => {
-                    user.profile = Object.assign({}, user.profile, val);
-                    cb(user.profile);
-                });
-            }
-            return user.profile;
-        },
-        []
-    );
+    //             user.profile = Object.assign({}, resources.node.profile, preProfile);
+    //         }
+    //         if (cb && user.profile.auto) {
+    //             user.profile.auto = false;
+    //             user.node.profile.once((val) => {
+    //                 user.profile = Object.assign({}, user.profile, val);
+    //                 cb(user.profile);
+    //             });
+    //         }
+    //         return user.profile;
+    //     },
+    //     []
+    // );
 
 
 
@@ -297,7 +297,10 @@ const UserProvider = (props) => {
 
     }, [feedReady, feedIndex]); // User here is the viewer
 
-    async function initializeRelationships(loggedInUser, maxDegree = 1) {
+    // Max degree is the number of degrees out the trust will be followed
+    // First degree, people that loggedInUser is trusting. 
+    // Second degree is people of trusted people that loggedInUser is trusting.
+    async function initializeRelationships(loggedInUser, maxDegree = 2) {
         console.log(`Subscribing to users Trust - GUN Style`);
         const userFound = {}; // Make sure only to process the user once.
 
@@ -313,12 +316,13 @@ const UserProvider = (props) => {
 
         function addRelationship(relationship, targetUser, parentUser, degree) {
 
+            let rcopy = Object.assign({}, relationship); // Copy the relationship to avoid binding to GUN
             if (!targetUser.relationshipBy[degree]) targetUser.relationshipBy[degree] = {};
-            targetUser.relationshipBy[degree][parentUser.id] = relationship;
+            targetUser.relationshipBy[degree][parentUser.id] = rcopy;
 
             targetUser.relationshipChanged += 1; // Used to indicate that a new calculation of score for the user should be done before display. 
 
-            parentUser.relationships[targetUser.id] = relationship;
+            parentUser.relationships[targetUser.id] = rcopy;
 
             return targetUser;
         }
@@ -404,8 +408,10 @@ const UserProvider = (props) => {
 
                 addRelationship(relationship, targetUser, currentUser, localDegree);
                 // Subscribe to events 
-                subscribe(currentUser, targetUser, relationship, localDegree);
+                subscribe(targetUser, relationship, localDegree);
 
+                // TODO: May not be the best way to go around this. Calculating the state for every relationship added or removed.
+                // However the method is async dependen on Gun, so no way to known when the next data will be ready.
                 targetUser.calculateState();
                 targetUser.onChange.fire(targetUser.relationshipChanged);
 
@@ -441,12 +447,12 @@ const UserProvider = (props) => {
 
         const userContainer = getUserContainer(user); // Load currently loggin user
         // Load the profile on to dpeepUser
-        loadProfile(userContainer);
+        userContainer.loadProfile();
         setUser(userContainer);
         //initializeFeed(userContainer);
         initializeRelationships(userContainer);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [setIsLoggedIn, setGunUser, getUserContainer, loadProfile, setUser]); //, initializeFeed
+    }, [setIsLoggedIn, setGunUser, getUserContainer, setUser]); //, initializeFeed
 
 
     const loadFeed = React.useCallback(() => {
@@ -514,13 +520,13 @@ const UserProvider = (props) => {
         () => ({
             user, gun, isLoggedIn, feed, feedIndex, feedReady, messageReceived, userSignUp, loginPassword,
             logout, setFeed, getUserContainerById,
-            loadProfile, followUser, setMessageReceived, resetFeedReady, loadFeed,
+            followUser, setMessageReceived, resetFeedReady, loadFeed,
             createContainer
         }),
         [
             user, gun, isLoggedIn, feed, feedIndex, feedReady, messageReceived,
             userSignUp, loginPassword, logout, setFeed, getUserContainerById,
-            loadProfile, followUser, setMessageReceived, resetFeedReady, loadFeed,
+            followUser, setMessageReceived, resetFeedReady, loadFeed,
             createContainer
         ]
     );

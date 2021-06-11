@@ -7,6 +7,7 @@ import MuteUser from "../MenuItems/MuteUser";
 import BlockUser from "../MenuItems/BlockUser";
 import AnalyseGraph from "../MenuItems/AnalyseGraph";
 import TrustUser from "../MenuItems/TrustUser";
+import DeleteTweetMenuItem from "../MenuItems/DeleteTweetMenuItem";
 
 const Wrapper = styled.div`
 
@@ -39,7 +40,7 @@ const TweetMenuBtn = React.forwardRef(({ open, ...props }, ref) => {
 });
 
 
-const ProfileMenu = ({ user }) => {
+const TweetMenu = ({ item }) => {
   const theme = useContext(ThemeContext);
 
   const contentStyle = {
@@ -53,6 +54,8 @@ const ProfileMenu = ({ user }) => {
   const overlayStyle = {
     background: "none",
   };
+
+  const user = item.owner;
 
   return (
     <Wrapper>
@@ -69,10 +72,11 @@ const ProfileMenu = ({ user }) => {
         <FollowUser user={ user } />
         <MuteUser user={ user } />
         <BlockUser user={ user } />
+        <DeleteTweetMenuItem item={item} />
         <AnalyseGraph user={ user }/>
       </Popup> 
     </Wrapper>
   );
 };
 
-export default ProfileMenu;
+export default TweetMenu;

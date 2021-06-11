@@ -10,9 +10,7 @@ const resources = {
                 tweetsMetadata: "tweetsMetadata",
                 relationships: "relationships",
                 relationshipsMetadata: "relationshipsMetadata",
-                follow : "follow",
                 replys: "replys",
-                trust: "trust",
                 claims: "claims",
                 claimsMetadata: "claimsMetadata",
                 distrust: "distrust",
@@ -25,7 +23,11 @@ const resources = {
                 next: "next",
                 comments: "comments",
                 userIndex: "userIndex",
-                neutral: "neutral"
+                trust: "trust",
+                follow : "follow",
+                neutral: "neutral",
+                mute: "mute",
+                block: "block"
 
             },
             envelope: {

@@ -1,17 +1,18 @@
 import React, { useContext } from "react";
 import { ThemeContext } from "../../context/ThemeContext";
 import useProfile from '../../hooks/useProfile';
-import useFollow from "../../hooks/useFollow";
 import MenuButton from "../../styles/MenuButton";
 import { PersonPlus, PersonDash } from 'react-bootstrap-icons';
 import useUser from "../../hooks/useUser";
+import useUserAction from "../../hooks/useUserAction";
+import resources from "../../utils/resources";
 
 const FollowUser = ({ user }) => {
 
   const { user: loggedInUser } = useUser();
   const profile = useProfile(user);
   const { theme } = useContext(ThemeContext);
-  const [followState, setFollow] = useFollow(user);
+  const [actionState, setAction] = useUserAction(user, loggedInUser, resources.node.names.follow);
 
   if(loggedInUser.id === user.id) 
     return null; // Ignore myself
@@ -19,15 +20,15 @@ const FollowUser = ({ user }) => {
   const { handle } = profile;
 
   return (
-    <MenuButton onClick={setFollow}>
-      {followState ?
+    <MenuButton onClick={setAction}>
+      {actionState ?
         <React.Fragment>
-          <PersonDash sm color={theme.accentColor} />
+          <PersonDash color={theme.accentColor} />
           <p>Unfollow - @{handle}</p>
         </React.Fragment>
       : 
         <React.Fragment>
-          <PersonPlus sm color={theme.accentColor} />
+          <PersonPlus color={theme.accentColor} />
           <p>Follow - @{handle}</p>
         </React.Fragment>
       }

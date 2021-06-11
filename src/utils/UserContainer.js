@@ -8,6 +8,7 @@ export class UserContainer {
 
         let pub = (gunUser.is) ? gunUser.is.pub : gunUser["_"]["soul"];
         this.id = (pub[0] === '~') ? pub.substring(1) : pub;
+        this.nodeId = (pub[0] !== '~') ?  '~'+pub : pub;
 
         const dpeep = gunUser.get(resources.node.names.dpeep);
         const profile = dpeep.get(resources.node.names.profile);
@@ -40,10 +41,7 @@ export class UserContainer {
         this.relationshipChanged = 0;
         this.score = this.scoreInit();
         this.onChange = new DispatcherEvent("onChange");
-    }
-
-    test() {
-        return "HANS";
+        this.onProfileChange = new DispatcherEvent("onProfileChange");
     }
 
     scoreInit() {
@@ -99,6 +97,35 @@ export class UserContainer {
         let colors = this.getColors();
         this.localState = colors.sort((a, b) => b.score - a.score)[0];
         this.localState.degree = degree;
+    }
+
+    static getDefaultProfile(userid, profile) {
+        const handle = (profile && profile.handle) || `${userid.substring(0,4)}...${userid.substring(userid.length - 4, userid.length)}`;
+        const displayname =(profile &&  profile.displayname) || "Anonymous";
+        return { userid, handle, displayname, loaded: false };
+      }
+
+    loadProfile(cb) {
+
+        if (!this.profile) {
+            const preProfile = UserContainer.getDefaultProfile(this.id, null);
+            this.profile = Object.assign({}, resources.node.profile, preProfile);
+        }
+
+        if (cb && !this.profile.loaded) {
+            this.profile.loaded = true;
+            this.node.profile.once((val) => {
+                this.profile = Object.assign({}, this.profile, val); // Create a new object, that will trigger rerender on React
+                cb(this.profile);
+            });
+        }
+        return this.profile;
+
+    }
+
+    setAction(targetUser, action) {
+        //this.node.relationships.get(targetUser.nodeId).get('action').put(action.name);
+        this.node.relationships.get('~'+targetUser.id).put(action);
     }
 
 }

@@ -7,8 +7,10 @@ import ConfirmReject from "../Message/ConfirmReject";
 import Retweet from "./Retweet";
 import { CommentIcon } from "../Icons";
 import AvatarIdenticon from "../AvatarIdenticon";
-import ProfileMenu from '../Profile/ProfileMenu'
 import useProfile from '../../hooks/useProfile';
+import Degree from "../Buttons/Degree";
+import useUserChanged from "../../hooks/useUserChanged";
+import TweetMenu from "./TweetMenu";
 
 const Wrapper = styled.div`
   display: flex;
@@ -30,6 +32,7 @@ const Wrapper = styled.div`
 
   .tweet-info-user div.menu {
     float: right;
+    padding-left: 20px;
   }
 
 
@@ -97,12 +100,17 @@ const Wrapper = styled.div`
 
 const Tweet = ({ item }) => {
 
+  const [,] = useUserChanged(item.owner);
+
   const profile = useProfile(item.owner);
 
   const userid = item.owner.id;
   const { handle, displayname } = profile;
 
   const itemUri = encodeURIComponent(item.soul);
+
+  if(item.owner.localState.name === "block" || item.owner.localState.name === "mute")
+    return null;
   
   return (
     <Wrapper>
@@ -118,7 +126,10 @@ const Tweet = ({ item }) => {
             <span className="secondary">- {moment(item.data.createdAt).fromNow()}</span>
           </Link>
           <div className="menu">
-            <ProfileMenu user={item.owner}></ProfileMenu>
+            <Degree user={item.owner}></Degree>
+          </div>
+          <div className="menu">
+            <TweetMenu item={item} />
           </div>
         </div>
 

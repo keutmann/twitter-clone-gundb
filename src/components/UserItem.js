@@ -1,7 +1,6 @@
 import React from "react";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
-import Follow from "./Profile/Follow";
 import Button from "../styles/Button";
 import AvatarIdenticon from "./AvatarIdenticon";
 import useProfile from '../hooks/useProfile';
@@ -42,12 +41,12 @@ const UserWrapper = styled.div`
 	}
 `;
 
-const FollowUser = ({ id, followUser }) => {
+const UserItem = ({ id, user }) => {
 
 
-	const profile = useProfile(followUser);
+	const profile = useProfile(user);
 
-	const userid = followUser.id;
+	const userid = user.id;
 	const { handle, displayname } = profile;
 	  
     return (
@@ -64,11 +63,11 @@ const FollowUser = ({ id, followUser }) => {
 			</div>
 		</div>
 
-		{!followUser.isSelf ? (
+		{!user.isSelf ? (
 			<React.Fragment>
-				<Follow sm user={followUser} />
-				<Degree user={followUser}></Degree>
-				<ProfileMenu user={followUser}></ProfileMenu>
+				<span>{user.localState.name}</span>
+				<Degree user={user}></Degree>
+				<ProfileMenu user={user}></ProfileMenu>
 
 			</React.Fragment>
 		) : (
@@ -81,4 +80,4 @@ const FollowUser = ({ id, followUser }) => {
 	</UserWrapper>);
 };
 
-export default FollowUser;
+export default UserItem;

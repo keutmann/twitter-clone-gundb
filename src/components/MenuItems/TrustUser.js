@@ -1,17 +1,18 @@
 import React, { useContext } from "react";
-import MenuButton from "../../styles/MenuButton";
 import { ThemeContext } from "../../context/ThemeContext";
-import { BlockIcon } from "../Icons";
 import useProfile from '../../hooks/useProfile';
+import MenuButton from "../../styles/MenuButton";
 import useUser from "../../hooks/useUser";
 import useUserAction from "../../hooks/useUserAction";
+import { NeutralIcon, TrustIcon } from "../Icons";
 import resources from "../../utils/resources";
 
-const BlockUser = ({ user }) => {
+const TrustUser = ({ user }) => {
+
   const { user: loggedInUser } = useUser();
   const profile = useProfile(user);
   const { theme } = useContext(ThemeContext);
-  const [actionState, setAction] = useUserAction(user, loggedInUser, resources.node.names.block);
+  const [actionState, setAction] = useUserAction(user, loggedInUser,  resources.node.names.trust);
 
   if(loggedInUser.id === user.id) 
     return null; // Ignore myself
@@ -20,10 +21,19 @@ const BlockUser = ({ user }) => {
 
   return (
     <MenuButton onClick={setAction}>
-      <BlockIcon color={theme.accentColor} />
-      <p>{actionState ? "Unblock" : "Block" } - @{handle}</p>
+      {actionState ?
+        <React.Fragment>
+          <NeutralIcon color={theme.accentColor} />
+          <p>Untrust - @{handle}</p>
+        </React.Fragment>
+      : 
+        <React.Fragment>
+          <TrustIcon color={theme.accentColor} />
+          <p>Trust - @{handle}</p>
+        </React.Fragment>
+      }
     </MenuButton>
   );
 };
 
-export default BlockUser;
+export default TrustUser;

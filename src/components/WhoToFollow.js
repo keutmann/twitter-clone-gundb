@@ -4,7 +4,7 @@ import Loader from "./Loader";
 import Header from "./Header";
 import useUser from "../hooks/useUser";
 import resources from '../utils/resources';
-import FollowUser from "./FollowUser";
+import UserItem from "./UserItem";
 
 
 const Wrapper = styled.div`
@@ -59,7 +59,7 @@ const WhoToFollow = () => {
 			<Header>Who to follow</Header>
 			{
 				(list.length > 0) ?
-					list.map(followUser => <FollowUser key={followUser.id} followUser={followUser} /> )
+					list.map(user => <UserItem key={user.id} user={user} /> )
 					:
 					<p>No other users was found</p>
 			}

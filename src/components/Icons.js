@@ -133,8 +133,9 @@ export const HeartFillIcon = ({ color, onClick }) => (
   </Svg>
 );
 
-export const TrashIcon = ({ loading, onClick }) => (
+export const TrashIcon = ({ loading, onClick, color }) => (
   <DimmedSvg
+    color={color}
     viewBox="0 0 24 24"
     onClick={onClick}
     loading={loading ? "loading" : ""}
@@ -285,6 +286,27 @@ export const MuteIcon = ({ color, sm }) => (
   <path d="M3.35 5.47c-.18.16-.353.322-.518.487A13.134 13.134 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7.029 7.029 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12-.708.708z"/>
 </Svg>
 );
+
+export const NeutralIcon = ({ color, sm }) => (
+  <Svg xmlns="http://www.w3.org/2000/svg" 
+      color={color}
+      sm={sm}
+      width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+    <path d="M4 10.5a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 0-1h-7a.5.5 0 0 0-.5.5zm3-4C7 5.672 6.552 5 6 5s-1 .672-1 1.5S5.448 8 6 8s1-.672 1-1.5zm4 0c0-.828-.448-1.5-1-1.5s-1 .672-1 1.5S9.448 8 10 8s1-.672 1-1.5z"/>
+  </Svg>
+);
+
+export const TrustIcon = ({ color, sm }) => (
+  <Svg xmlns="http://www.w3.org/2000/svg" 
+    color={color}
+    sm={sm}
+    width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+    <path d="M4.285 9.567a.5.5 0 0 1 .683.183A3.498 3.498 0 0 0 8 11.5a3.498 3.498 0 0 0 3.032-1.75.5.5 0 1 1 .866.5A4.498 4.498 0 0 1 8 12.5a4.498 4.498 0 0 1-3.898-2.25.5.5 0 0 1 .183-.683zM7 6.5C7 7.328 6.552 8 6 8s-1-.672-1-1.5S5.448 5 6 5s1 .672 1 1.5zm4 0c0 .828-.448 1.5-1 1.5s-1-.672-1-1.5S9.448 5 10 5s1 .672 1 1.5z"/>
+  </Svg>
+);
+
 
 export const ThreeDotsIcon = ({ color, sm }) => (
   <Svg 

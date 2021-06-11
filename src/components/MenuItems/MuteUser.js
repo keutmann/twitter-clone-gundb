@@ -1,10 +1,11 @@
 import React, { useContext } from "react";
 import { ThemeContext } from "../../context/ThemeContext";
 import useProfile from '../../hooks/useProfile';
-import useMute from "../../hooks/useMute";
 import MenuButton from "../../styles/MenuButton";
 import { Eye, EyeSlash } from 'react-bootstrap-icons';
 import useUser from "../../hooks/useUser";
+import useUserAction from "../../hooks/useUserAction";
+import resources from "../../utils/resources";
 
 
 const MuteUser = ({ user }) => {
@@ -12,7 +13,8 @@ const MuteUser = ({ user }) => {
   const { user: loggedInUser } = useUser();
   const profile = useProfile(user);
   const { theme } = useContext(ThemeContext);
-  const [isMuteed, setMute] = useMute(user);
+  const [actionState, setAction] = useUserAction(user, loggedInUser, resources.node.names.mute);
+
 
   if(loggedInUser.id === user.id) 
     return null; // Ignore myself
@@ -20,15 +22,15 @@ const MuteUser = ({ user }) => {
   const { handle } = profile;
 
   return (
-    <MenuButton onClick={setMute}>
-      {isMuteed ?
+    <MenuButton onClick={setAction}>
+      {actionState ?
         <React.Fragment>
-          <Eye sm color={theme.accentColor} />
+          <Eye color={theme.accentColor} />
           <p>Unmute - @{handle}</p>
         </React.Fragment>
       : 
         <React.Fragment>
-          <EyeSlash sm color={theme.accentColor} />
+          <EyeSlash color={theme.accentColor} />
           <p>Mute - @{handle}</p>
         </React.Fragment>
       }

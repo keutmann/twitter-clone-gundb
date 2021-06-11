@@ -24,7 +24,7 @@ const Wrapper = styled.div`
 `;
 
 const Profile = () => {
-  const { isLoggedIn, user, loadProfile, getUserContainerById } = useUser();
+  const { isLoggedIn, user, getUserContainerById } = useUser();
   const { handle } = useParams(); 
   const [ viewedUser, setViewedUser] = useState(null);
   const [ profile, setProfile] = useState(null);
@@ -38,7 +38,7 @@ const Profile = () => {
       return;
     }
     setViewedUser(userContainer);
-    setProfile(loadProfile(userContainer, (profile) => setProfile(profile))); 
+    setProfile(userContainer.loadProfile((profile) => setProfile(profile))); 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handle])
 

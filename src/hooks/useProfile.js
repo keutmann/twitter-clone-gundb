@@ -1,16 +1,19 @@
-import { useState } from 'react';
-import useUser from "./useUser";
+import { useState, useEffect } from 'react';
 
-const useProfile = (userContainer) => {
+const useProfile = (user) => {
 
-    function loader () {
-        if(userContainer) 
-          return loadProfile(userContainer, (profile) => setProfile(profile));
-        return null;
-    }
+    const [ profile, setProfile] = useState(user.loadProfile());
 
-    const { loadProfile } = useUser();
-    const [ profile, setProfile] = useState(loader);
+    useEffect(() => {
+
+      if(!user.profile.loaded) {
+        user.loadProfile((profile) => setProfile(profile));
+      } else {
+        setProfile(profile);
+      }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [setProfile]);
 
     return profile;
   }
