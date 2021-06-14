@@ -64,16 +64,21 @@ const TweetMenu = ({ item }) => {
         trigger={(open) => <TweetMenuBtn open={open} />}
         position="bottom right"
         closeOnDocumentClick
+        nested
         contentStyle={contentStyle}
         overlayStyle={overlayStyle}
         arrow={false}
       >
-        <TrustUser user={ user } />
-        <FollowUser user={ user } />
-        <MuteUser user={ user } />
-        <BlockUser user={ user } />
-        <DeleteTweetMenuItem item={item} />
-        <AnalyseGraph user={ user }/>
+        {close => (
+        <React.Fragment>
+          <TrustUser user={ user } popupClose={close} />
+          <FollowUser user={ user } />
+          <MuteUser user={ user } />
+          <BlockUser user={ user } />
+          <DeleteTweetMenuItem item={item} />
+          <AnalyseGraph user={ user }/>
+        </React.Fragment>
+        )}
       </Popup> 
     </Wrapper>
   );

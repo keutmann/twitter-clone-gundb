@@ -64,6 +64,7 @@ const ProfileMenu = ({ user }) => {
         contentStyle={contentStyle}
         overlayStyle={overlayStyle}
         arrow={false}
+        nested
       >
         <TrustUser user={ user } />
         <FollowUser user={ user } />
