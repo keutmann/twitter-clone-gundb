@@ -11,6 +11,7 @@
     "gun": "github:amark/gun",
     "gun-util": "^0.0.16",
     "husky": "^4.2.5",
+    "md5": "^2.3.0",
     "moment": "^2.29.1",
     "pretty-quick": "^2.0.1",
     "react": "^17.0.2",
@@ -23,6 +24,7 @@
     "react-tabs": "^3.2.2",
     "react-textarea-autosize": "^8.3.2",
     "react-toastify": "^5.5.0",
+    "react-vis-network-graph": "^3.0.1",
     "reactjs-popup": "^2.0.4",
     "styled-components": "^4.4.1"
   },

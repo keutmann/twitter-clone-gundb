@@ -9,6 +9,16 @@ export const lightTheme = {
   overlay: "rgba(147, 149, 150, 0.4)",
   font: "Poppins",
   bs1: "0 0 6px 3px rgba(0,0,0,0.1)",
+  trustBackground: "purple",
+  trustTextcolor: "white",
+  followBackground: "green",
+  followTextcolor: "black",
+  neutralBackground: "white",
+  neutralTextcolor: "black",
+  muteBackground: "yellow",
+  muteTextcolor: "black",
+  blockBackground: "red",
+  blockTextcolor: "white",
 };
 
 export const darkTheme = {
@@ -22,4 +32,15 @@ export const darkTheme = {
   overlay: "rgba(110, 118, 125, 0.4)",
   font: "Poppins",
   bs1: "0 0 6px 3px rgba(0,0,0,0.1)",
+  trustBackground: "purple",
+  trustTextcolor: "white",
+  followBackground: "green",
+  followTextcolor: "black",
+  neutralBackground: "white",
+  neutralTextcolor: "black",
+  muteBackground: "yellow",
+  muteTextcolor: "black",
+  blockBackground: "red",
+  blockTextcolor: "white",
+
 };

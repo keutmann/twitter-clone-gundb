@@ -340,6 +340,8 @@ const UserProvider = (props) => {
             return existingRelationship;
         }
 
+
+        // TODO: The cascading effect of Trust and Untrust, needs to be done.
         function unsubscribe(currentUser, targetUser, existingRelationship) {
 
 
@@ -349,10 +351,14 @@ const UserProvider = (props) => {
 
             if (existingRelationship.action === 'trust') {
                 targetUser.node.claimsMetadata.get(resources.node.names.latest).off();
-                feedIndex.forEach(element => {
-                    delete element.claimedBy[targetUser.id];
-                    element.claimsChanged = true;
-                }); // Remove all claims
+
+                // Remove the trust from TargetUser on all items.
+                for (const [,item] of Object.entries(feedIndex)) {
+                    if(item.claimedBy) {
+                        delete item.claimedBy[targetUser.id];
+                        item.claimsChanged = true;
+                    }
+                }; // Remove all claims
             }
             // If Trust then go though all relations to recalculate their new localState
 
@@ -362,6 +368,7 @@ const UserProvider = (props) => {
             // }
         }
 
+        // TODO: The cascading effect of Trust and Untrust, needs to be done.
         async function subscribe(targetUser, relationship, localDegree) {
             if (relationship.action === 'follow' || relationship.action === 'trust') {
                 targetUser.node.tweetsMetadata.get(resources.node.names.latest).on(addFeed); // Load the latest tweet from the user.

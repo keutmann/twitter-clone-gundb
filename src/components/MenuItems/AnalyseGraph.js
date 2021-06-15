@@ -2,7 +2,7 @@ import React, { useContext, useState } from "react";
 import MenuButton from "../../styles/MenuButton";
 import { ThemeContext } from "../../context/ThemeContext";
 import { Diagram2 } from 'react-bootstrap-icons';
-import AnalyseGraphModal from "../Analyse/AnalyseGraphModal";
+import RelationshipGraphModal from "../Analyse/RalationshipGraphModal";
 
 const AnalyseGraph = ({ user, popupClose }) => {
 
@@ -26,7 +26,7 @@ const AnalyseGraph = ({ user, popupClose }) => {
     <MenuButton onClick={openModal}>
       <Diagram2 color={theme.accentColor} />
       <p>Analyse connections</p>
-      <AnalyseGraphModal open={open} onClose={closeModal} saveModal={saveModal} header={"Analyse user"} saveTitle={"Save"} />
+      <RelationshipGraphModal open={open} onClose={closeModal} saveModal={saveModal} header={"Analyse user"} saveTitle={"Save"} user={user} />
     </MenuButton>
   );
 };

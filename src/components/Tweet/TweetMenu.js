@@ -58,7 +58,7 @@ const TweetMenu = ({ item }) => {
   const user = item.owner;
 
   return (
-    <Wrapper>
+    <Wrapper style={{ display: '' }}>
       <Popup
         className="btn"
         trigger={(open) => <TweetMenuBtn open={open} />}
@@ -74,9 +74,9 @@ const TweetMenu = ({ item }) => {
           <TrustUser user={ user } popupClose={close} />
           <FollowUser user={ user } />
           <MuteUser user={ user } />
-          <BlockUser user={ user } />
+          <BlockUser user={ user } popupClose={close} />
           <DeleteTweetMenuItem item={item} />
-          <AnalyseGraph user={ user }/>
+          <AnalyseGraph user={ user } popupClose={close} />
         </React.Fragment>
         )}
       </Popup> 

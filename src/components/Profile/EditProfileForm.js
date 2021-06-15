@@ -11,6 +11,7 @@ import CoverPhoto from "../../styles/CoverPhoto";
 import AvatarIdenticon from "../AvatarIdenticon";
 import { uploadImage } from "../../utils";
 import useUser from "../../hooks/useUser";
+import Avatar from "../../styles/Avatar";
 
 
 const EditProfileForm = ({ history }) => {
@@ -47,9 +48,6 @@ const EditProfileForm = ({ history }) => {
           dob : ''
       };
 
-      // There may be no undefined properties in the object or it will not be saved to the gun graph
-      formData.avatar = '';
-
       let updatedData = Object.assign(profile, formData);
 
       user.node.profile.put(updatedData);
@@ -72,11 +70,80 @@ const EditProfileForm = ({ history }) => {
   };
 
   const handleCoverPhoto = async (e) => {
-    setCoverPhoto(await uploadImage(e.target.files[0]));
+    //setCoverPhoto(await uploadImage(e.target.files[0]));
   };
 
-  const handleAvatar = async (e) => {
-    setAvatar(await uploadImage(e.target.files[0]));
+  // const photoUpload = (e: any) => {
+  //   e.preventDefault();
+  //   const reader = new FileReader();
+  //   const file = e.target.files[0];
+  //   console.log("reader", reader)
+  //   console.log("file", file)
+  //   if (reader !== undefined && file !== undefined) {
+  //     reader.onloadend = () => {
+  //       //setFile(file)
+  //       //setSize(file.size);
+  //       //setName(file.name)
+  //       //setImagePreview(reader.result)
+
+  //     }
+  //     reader.readAsDataURL(file);
+  //   }
+  // }
+
+  function ResizeImage(file, cb) {
+    // Read in file
+      // Load the image
+      var reader = new FileReader();
+      reader.onload = function (readerEvent) {
+          var image = new Image();
+          image.onload = function (imageEvent) {
+
+              // Resize the image
+              var canvas = document.createElement('canvas'),
+                  max_size = 120,// TODO : pull max size from a site config
+                  width = image.width,
+                  height = image.height;
+
+              if (width > height) {
+                  if (width > max_size) {
+                      height *= max_size / width;
+                      width = max_size;
+                  }
+              } else {
+                  if (height > max_size) {
+                      width *= max_size / height;
+                      height = max_size;
+                  }
+              }
+              canvas.width = width;
+              canvas.height = height;
+              canvas.getContext('2d').drawImage(image, 0, 0, width, height);
+
+              var dataUrl = canvas.toDataURL('image/jpeg');
+              cb(dataUrl);
+          }
+          image.src = readerEvent.target.result;
+      }
+      reader.readAsDataURL(file);
+};
+
+
+    const handleAvatar = async (e) => {
+    console.log("file", e.target.files[0]);
+    let file = e.target.files[0];
+    if (file) {
+      ResizeImage(file, (dataurl) => {
+        setAvatar(dataurl);
+      });
+      // const reader = new FileReader();
+      // reader.onload = (readerEvt) => {
+      //   let binaryString = readerEvt.target.result;
+      // }
+
+      // reader.readAsDataURL(file)
+    }
+
   };
 
   return (
@@ -95,12 +162,16 @@ const EditProfileForm = ({ history }) => {
       <Wrapper>
         <label>Avatar Photo</label>
         <label htmlFor="avatar-input-file">
-          <AvatarIdenticon id={handle} profile={profile} />
-          {/* <Avatar
+          
+          { avatarState && avatarState.length > 0 ?
+          <Avatar
             lg
             src={avatarState ? avatarState : avatar.value}
             alt="avatar"
-          /> */}
+          />
+          : 
+          <AvatarIdenticon id={handle} profile={profile} />
+          }
         </label>
         <input type="file" accept="image/*" id="avatar-input-file" onChange={handleAvatar} />
       </Wrapper>

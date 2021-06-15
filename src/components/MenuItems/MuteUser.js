@@ -22,7 +22,7 @@ const MuteUser = ({ user }) => {
   const { handle } = profile;
 
   return (
-    <MenuButton onClick={setAction}>
+    <MenuButton onClick={() => setAction({})}>
       {actionState ?
         <React.Fragment>
           <Eye color={theme.accentColor} />

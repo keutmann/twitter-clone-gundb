@@ -2,6 +2,7 @@ import React, { useContext } from "react";
 import Popup from 'reactjs-popup';
 import styled from "styled-components";
 import { ThemeContext } from "styled-components";
+import RelationshipGraph from "./RelationshipGraph";
 
 const StyledPopup = styled(Popup)`
   // use your custom style for ".popup-overlay"
@@ -33,7 +34,7 @@ const StyledPopup = styled(Popup)`
   }
 `;
 
-const AnalyseGraphModal = (props) => {
+const RelationshipGraphModal = (props) => {
 
     const theme = useContext(ThemeContext);
 
@@ -46,7 +47,7 @@ const AnalyseGraphModal = (props) => {
     // }
 
     const contentStyle = {
-        width: "460px",
+        width: "660px",
         background: theme.background,
         borderRadius: "6px",
         border: `1px solid ${theme.tertiaryColor}`,
@@ -76,11 +77,11 @@ const AnalyseGraphModal = (props) => {
                     <button className="close" onClick={close}>&times;</button>
                     <div className="header">{props.header}</div>
                     <div className="content">
-
+                        <RelationshipGraph user={props.user} />
                     </div>
                 </div>
             )}
         </StyledPopup>);
 }
 
-export default AnalyseGraphModal;
+export default RelationshipGraphModal;

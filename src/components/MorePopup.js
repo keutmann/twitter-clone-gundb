@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { ThemeContext } from "styled-components";
+import { ThemeContext } from "../context/ThemeContext";
 import styled from "styled-components";
 import Popup from "reactjs-popup";
 import Svg from "../styles/Svg";

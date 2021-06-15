@@ -9,13 +9,11 @@ const Auth = (prop) => {
 
 
   return (
-    <>
-      {authAction === "LOGIN" ? (
+       (authAction === "LOGIN") ? (
         <Login changeToSignup={changeToSignup} />
       ) : (
         <Signup changeToLogin={changeToLogin} />
-      )}
-    </>
+      )
   );
 };
 

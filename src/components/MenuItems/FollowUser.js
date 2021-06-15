@@ -20,7 +20,7 @@ const FollowUser = ({ user }) => {
   const { handle } = profile;
 
   return (
-    <MenuButton onClick={setAction}>
+    <MenuButton onClick={() => setAction({})}>
       {actionState ?
         <React.Fragment>
           <PersonDash color={theme.accentColor} />

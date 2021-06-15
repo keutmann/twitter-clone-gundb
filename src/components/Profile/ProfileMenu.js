@@ -66,11 +66,15 @@ const ProfileMenu = ({ user }) => {
         arrow={false}
         nested
       >
-        <TrustUser user={ user } />
-        <FollowUser user={ user } />
-        <MuteUser user={ user } />
-        <BlockUser user={ user } />
-        <AnalyseGraph user={ user }/>
+      {close => (
+        <React.Fragment>
+          <TrustUser user={ user } popupClose={close} />
+          <FollowUser user={ user } />
+          <MuteUser user={ user } />
+          <BlockUser user={ user } popupClose={close} />
+          <AnalyseGraph user={ user } popupClose={close} />
+        </React.Fragment>
+        )}
       </Popup> 
     </Wrapper>
   );

@@ -18,7 +18,7 @@ const StyledIdenticon = styled(Identicon)`
 `;
 
 const AvatarIdenticon = ({id, profile}) => (profile && profile.avatar) ?
-  <Avatar src={profile.avatar} alt="avatar" /> 
+  <Avatar src={profile && profile.avatar} alt="avatar" /> 
   :
   <StyledIdenticon string={id} size="40" />
   ;
