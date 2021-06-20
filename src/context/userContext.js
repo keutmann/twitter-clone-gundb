@@ -182,15 +182,15 @@ const UserProvider = (props) => {
         [gun, users, getUserContainer]
     );
 
-    // A slim user object, optimized for performance
-    const getSlimUser = React.useCallback(
-        (userId) => {
-            return getUserContainerById(userId);
+    // // A slim user object, optimized for performance
+    // const getSlimUser = React.useCallback(
+    //     (userId) => {
+    //         return getUserContainerById(userId);
 
-            //return users[userId] || (users[userId] = Object.assign({}, users[userId], { id: userId }, relationshipUserObj()));
-        },
-        [getUserContainerById]
-    );
+    //         //return users[userId] || (users[userId] = Object.assign({}, users[userId], { id: userId }, relationshipUserObj()));
+    //     },
+    //     [getUserContainerById]
+    // );
 
 
     const createContainer = React.useCallback((data) => {
@@ -302,7 +302,7 @@ const UserProvider = (props) => {
     // Second degree is people of trusted people that loggedInUser is trusting.
     async function initializeRelationships(loggedInUser, maxDegree = 2) {
         console.log(`Subscribing to users Trust - GUN Style`);
-        const userFound = {}; // Make sure only to process the user once.
+        //const userFound = {}; // Make sure only to process the user once.
 
         console.log("initializeRelationships: " + loggedInUser.id);
         // Get a slim user object and not the full container 
@@ -314,129 +314,162 @@ const UserProvider = (props) => {
             item.claimedBy[userId] = claim;
         }
 
-        function addRelationship(relationship, targetUser, parentUser, degree) {
-
-            let rcopy = Object.assign({}, relationship); // Copy the relationship to avoid binding to GUN
-            if (!targetUser.relationshipBy[degree]) targetUser.relationshipBy[degree] = {};
-            targetUser.relationshipBy[degree][parentUser.id] = rcopy;
-
-            targetUser.relationshipChanged += 1; // Used to indicate that a new calculation of score for the user should be done before display. 
-
-            parentUser.relationships[targetUser.id] = rcopy;
-
-            return targetUser;
-        }
-
-        function removeRelationship(targetUser, parentUser) {
-            const existingRelationship = parentUser.relationships[targetUser.id];
-            if (existingRelationship) {
-                targetUser.relationshipBy.forEach(element => {
-                    if (element.hasOwnProperty(parentUser.id))
-                        delete element[parentUser.id]; // Remove relationship
-                });
-                delete parentUser.relationships[targetUser.id]; // Remove relationship
-                targetUser.relationshipChanged += 1; // Indicate that a new calculation of localState should be done before display.
-            }
-            return existingRelationship;
-        }
-
-
         // TODO: The cascading effect of Trust and Untrust, needs to be done.
-        function unsubscribe(currentUser, targetUser, existingRelationship) {
-
-
-            if (existingRelationship.action === 'trust' || existingRelationship.action === 'follow') {
-                targetUser.node.tweetsMetadata.get(resources.node.names.latest).off(); // Unsubscibe from the latest tweet by the user.
-            }
-
-            if (existingRelationship.action === 'trust') {
-                targetUser.node.claimsMetadata.get(resources.node.names.latest).off();
-
-                // Remove the trust from TargetUser on all items.
-                for (const [,item] of Object.entries(feedIndex)) {
-                    if(item.claimedBy) {
-                        delete item.claimedBy[targetUser.id];
-                        item.claimsChanged = true;
-                    }
-                }; // Remove all claims
-            }
-            // If Trust then go though all relations to recalculate their new localState
-
-
-            // if(targetUser.state && targetUser.state !== resources.node.names.neutral) {
-
-            // }
-        }
-
-        // TODO: The cascading effect of Trust and Untrust, needs to be done.
-        async function subscribe(targetUser, relationship, localDegree) {
-            if (relationship.action === 'follow' || relationship.action === 'trust') {
-                targetUser.node.tweetsMetadata.get(resources.node.names.latest).on(addFeed); // Load the latest tweet from the user.
-            }
-
-            if (relationship.action === 'trust') {
-                // Subscribe to claims
-                targetUser.node.claimsMetadata.get(resources.node.names.latest).on((v, k) => addClaim(v, k, targetUser.id, localDegree)); // Load the latest tweet from the user.
-                // Load claims first!
-                const claimTree = targetUser.node.claims; // relationships is of Type DateTree
-                for await (let [month] of claimTree.iterate({ order: -1 })) {
-
-                    month.once().map().once((claim, key) => {
-                        addClaim(claim, key, targetUser.id, localDegree);
-                    });
+        function unloadClaims(targetUser) {
+            // Remove the trust from TargetUser on all items.
+            for (const [,item] of Object.entries(feedIndex)) {
+                if(item.claimedBy) {
+                    delete item.claimedBy[targetUser.id];
+                    item.claimsChanged = true;
                 }
-            }
-
+            }; // Remove all claims
         }
 
-        async function load(currentUser, currentDegree) {
+
+        async function loadClaims(targetUser) {
+            const claimTree = targetUser.node.claims; // relationships is of Type DateTree
+            for await (let [month] of claimTree.iterate({ order: -1 })) {
+
+                month.once().map().once((claim, key) => {
+                    addClaim(claim, key, targetUser.id, targetUser.degree);
+                });
+            }
+        }
+
+
+
+        function isTrust(event) {
+            return event.previousState.action !== resources.node.names.trust
+                && event.user.state.action === resources.node.names.trust;
+        }
+
+        function isUntrust(event) {
+            return event.previousState.action === resources.node.names.trust
+                && event.user.state.action !== resources.node.names.trust;
+        }
+
+        function isFollow(event) {
+            return event.previousState.action !== resources.node.names.follow
+                && event.user.state.action === resources.node.names.follow;
+        }
+
+        function isUnfollow(event) {
+            return event.previousState.action === resources.node.names.follow
+                && event.user.state.action !== resources.node.names.follow;
+        }
+
+        function isMute(event) {
+            return event.previousState.action !== resources.node.names.mute
+                && event.user.state.action === resources.node.names.mute;
+        }
+
+        function isUnmute(event) {
+            return event.previousState.action === resources.node.names.mute
+                && event.user.state.action !== resources.node.names.mute;
+        }
+
+        function isBlock(event) {
+            return event.previousState.action !== resources.node.names.block 
+                && event.user.state.action === resources.node.names.block;
+        }
+
+        function isUnblock(event) {
+            return event.previousState.action === resources.node.names.block
+                && event.user.state.action !== resources.node.names.block;
+        }
+
+        function followUser(targetUser) {
+            targetUser.node.tweetsMetadata.get(resources.node.names.latest).on(addFeed); // Load the latest tweet from the user.
+        }
+
+        function unfollowUser(targetUser) {
+            targetUser.node.tweetsMetadata.get(resources.node.names.latest).off(); // Unfollow target user.
+        }
+
+        function trustUser(targetUser) {
+            followUser(targetUser);
+
+            targetUser.node.claimsMetadata.get(resources.node.names.latest).on((v, k) => addClaim(v, k, targetUser.id, targetUser.degree)); // Load the latest tweet from the user.
+            // Load claims first async!
+            loadClaims(targetUser);
+
+            load(targetUser);
+        }
+
+        function untrustUser(targetUser) {
+            unfollowUser(targetUser);
+
+            targetUser.node.claimsMetadata.get(resources.node.names.latest).off();
+            targetUser.processed = false;
+            unloadClaims(targetUser);
+        }
+
+        function processEvent(event, targetUser) {
+            if(isUnfollow(event)) {
+                unfollowUser(targetUser);
+            }
+
+            if(isFollow(event)) {
+                followUser(targetUser);
+            }
+            
+            if(isTrust(event)) {
+                trustUser(targetUser);
+            }
+            
+            if(isUntrust(event)) {
+                untrustUser(targetUser);
+            }
+
+            if(isUnmute(event)) {
+
+            }
+
+            if(isMute(event)) {
+                
+            }
+
+            if(isUnblock(event)) {
+
+            }
+
+            if(isBlock(event)) {
+                
+            }
+        }
+
+        async function load(currentUser) {
             console.log("initializeRelationships - load: " + currentUser.id);
 
-            const localDegree = maxDegree - currentDegree;
-            userFound[currentUser.id] = localDegree; // Make sure that not to process the same user twice
+            if (currentUser.degree > maxDegree)
+                return; // Exit as the search ends here
 
-            if (--currentDegree < 0)
-                return;
+            if(currentUser.processed)
+                return; // Exit as the current user already has its relationships processed.
 
-            if (!currentUser.node) // If the user object is a slim version, load the full version.
-                currentUser = getUserContainerById(currentUser.id);
+            currentUser.processed = true; // Do not processed this user next time
 
             // Load relationships - map() automatically subscibes to changes in the relationship node
-            currentUser.node.relationships.map().on((relationship, key) => {
-                if (key[0] !== '~') return; // Ignore noice data from the relationships node, only process users.
+            currentUser.node.relationships.map().on((relationshipGun, key) => {
+                if (key[0] !== '~') return; // Ignore noise data from the relationships node, only process users.
 
-                const targetUser = getSlimUser(key);
+                // Copy the relationship, as the source object is updated automatically by Gun on change, making detecting changes impossible.
+                const relationship = Object.assign({}, relationshipGun); 
 
-                const existingRelationship = removeRelationship(targetUser, currentUser);
-                if (existingRelationship)
-                    // Unsubscribe any existing relationship
-                    unsubscribe(currentUser, targetUser, existingRelationship);
+                const targetUser = getUserContainerById(key);
 
+                const event = targetUser.addRelationship(relationship, currentUser, undefined);
+                currentUser.relationships[targetUser.id] = relationship; // Save the relationship to the current user as well.
 
-                addRelationship(relationship, targetUser, currentUser, localDegree);
-                // Subscribe to events 
-                subscribe(targetUser, relationship, localDegree);
-
-                // TODO: May not be the best way to go around this. Calculating the state for every relationship added or removed.
-                // However the method is async dependen on Gun, so no way to known when the next data will be ready.
-                targetUser.calculateState();
-                targetUser.onChange.fire(targetUser.relationshipChanged);
-
-                if (relationship.action === 'trust') {
-                    if (userFound[targetUser.id])
-                        return; // We have already processed this user, do not reprocess
-
-                    // Do not go futher than the relationship degree indicates. The relationhip degree may be lower than the currentDegree.
-                    const degree = (relationship?.degree < currentDegree) ? relationship.degree : currentDegree;
-                    load(targetUser, degree);
+                if(event.change) {  // Something new happened, lets check it out.
+                    processEvent(event, targetUser);
                 }
             });
         }
 
-        // Subscribe to one self
-        subscribe(loggedInUser, { action: "trust" }, 0);
-
-        load(loggedInUser, maxDegree); // Follow max one level out
+        // Subscribe to one self and start loading the web of trust network
+        loggedInUser.degree = 0; // logginInUser is always zero degree.
+        trustUser(loggedInUser);
     }
 
 

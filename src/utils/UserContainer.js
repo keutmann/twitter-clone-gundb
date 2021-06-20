@@ -37,14 +37,20 @@ export class UserContainer {
 
         this.relationshipBy = [];
         this.relationships = {};
-        this.localState = { score: 0, color: "", name: "neutral", degree: 0 };
         this.relationshipChanged = 0;
-        this.score = this.scoreInit();
+        this.scores = [];
+        this.score = null;
+        this.onScoreChange = new DispatcherEvent("onScoreChange");
+        this.state = this.createScore();
+        this.onStateChange = new DispatcherEvent("onStateChange");
         this.onChange = new DispatcherEvent("onChange");
         this.onProfileChange = new DispatcherEvent("onProfileChange");
+        this.degree = UserContainer.MAX_DEGREE; // The degree relative to the current user.
     }
 
-    scoreInit() {
+    static MAX_DEGREE = 99; // Make the degree high, so when a relationship is added it will get lower. 
+
+    emptyScoreObj() {
         return {
             trust: 0,
             follow: 0,
@@ -54,49 +60,108 @@ export class UserContainer {
             }
     };
 
-    getColors() {
-        let colors = [
-            { score: this.score.neutral, color: "", name: "neutral", degree: 0 },
-            { score: this.score.trust, color: "purple", name: "trust", degree: 0 },
-            { score: this.score.follow, color: "green", name: "follow", degree: 0 },
-            { score: this.score.mute, color: "yellow", name: "mute", degree: 0 },
-            { score: this.score.block, color: "black", name: "block", degree: 0 }
+
+    // Degree parameter is the source user's degree. 
+    addScore(relationship, degree) {
+        if(!this.scores[degree]) 
+            this.scores[degree] = this.emptyScoreObj();
+
+        this.scores[degree][relationship.action] += 1;
+        this.onScoreChange.fire({user:this, degree, relationship });
+
+        // if(this.degree > degree) // Only calculate score when the added relationship is relevant to the lowest degree.
+        //     this.calculateScore();
+    }
+
+    removeScore(relationship, degree) {
+        if(!this.scores[degree]) 
+            return;
+
+        this.scores[degree][relationship.action] -= 1;
+        this.onScoreChange.fire({user:this, degree, action:relationship.action, score:this.scores[degree] });
+
+        // if(this.degree > degree) // Only calculate score when the removed relationship is relevant to the lowest degree.
+        //     this.calculateScore();
+    }
+
+    createScore (val) {
+        return Object.assign({ score: 0, weight:0, color: "", action:resources.node.names.neutral }, val);
+    }
+
+    // Scores takes precendence in following order: trust, follow, mute, block.
+    // E.g. Are the score equally between one or more scores, then the precendence order kicks in.
+    getStates(score) {
+        let states = [
+            { score: score.trust, weight:score.trust+0.4, color: "purple", action: resources.node.names.trust },
+            { score: score.follow, weight:score.follow+0.3, color: "green", action: resources.node.names.follow },
+            { score: score.mute, weight:score.mute+0.2, color: "yellow", action: resources.node.names.mute },
+            { score: score.block, weight:score.block+0.1, color: "black", action: resources.node.names.block },
+            { score: score.neutral, weight:0,  color: "", action: resources.node.names.neutral }
         ];
-        return colors;
+        return states;
     }
 
     calculateScore() {
-        this.score = this.scoreInit(); // Reset score
+        let event = { user: this, change: false };
 
-
-        const findDegrees = (a, e, i) => {
-            a.push({ index: i, data: e });
+        const findScores = (a, e, i) => {
+            a.push({ i, e });
             return a;
         }
-        let degrees = this.relationshipBy.reduce(findDegrees, []);
-        let localStateDegree = 0;
+        let tempList = this.scores.reduce(findScores, []);
 
-        for (const degree of degrees) {
-            let entries = Object.entries(degree.data);
-            // eslint-disable-next-line no-unused-vars
-            for (const [key, value] of entries) {
-                //console.log(`${key}: ${value}`);
-                this.score[value.action] += 1;
+        let firstScore = tempList.find(x=> x !== undefined && x.e !== undefined && (x.e.trust > 0 || x.e.follow > 0 || x.e.mute > 0 || x.e.block > 0));
+        if(firstScore) {
+            let states = this.getStates(firstScore.e);
+            let firstState = states.sort((a, b) => b.weight - a.weight)[0];
+            if(firstState.action !== this.state.action || firstScore.i+1 !== this.degree ) {
+                this.score = firstScore.e;
+                this.degree = firstScore.i+1; // The user degree is always one higher than the lowest degree of relationships.
+                event.previousState = this.state;
+                event.change = true;
+                this.state = firstState;
+                this.onStateChange.fire(event);
             }
-            if (entries.length > 0) {
-                localStateDegree = degree.index;
-                break; // We found relationships, do not continue to the next of level of degree.
-            }
+        } else {
+            this.score = this.emptyScoreObj();
+            this.degree = UserContainer.MAX_DEGREE;
+            event.previousState = this.state;
+            event.change = true;
+            this.state = this.createScore();
+            this.onStateChange.fire(event);
         }
-        return localStateDegree;
+
+        return event;
     }
 
-    calculateState() {
-        let degree = this.calculateScore();
 
-        let colors = this.getColors();
-        this.localState = colors.sort((a, b) => b.score - a.score)[0];
-        this.localState.degree = degree;
+    // oldDegree is the sourcesUser's old degree if changed from the current one, this is used to remove the old relationship.
+    addRelationship(relationship, sourceUser, oldDegree) {
+        let event = { change: false };
+        //let rcopy = Object.assign({}, relationship); // Copy the relationship to avoid binding to GUN
+        const degree = (oldDegree) ? oldDegree : sourceUser.degree; // Find source users degree for removing relationship
+        if (!this.relationshipBy[degree]) this.relationshipBy[degree] = {};
+
+        let oldRelationship = this.relationshipBy[degree][sourceUser.id];
+
+        if(oldRelationship === relationship) 
+            return event;
+
+        if(oldRelationship) {
+            delete this.relationshipBy[degree][sourceUser.id];
+            this.removeScore(oldRelationship, degree);
+        }
+
+        this.relationshipBy[sourceUser.degree][sourceUser.id] = relationship; 
+        this.addScore(relationship, sourceUser.degree);
+
+        // Only calculate score when the added relationship is relevant to the lowest degree.
+        // If this.degree is lower or equal to the added relationship degree, then the added relationship is not relevant for the calculation of score.
+        if(this.degree > degree)  // degree is per default always 1 lower than this.degree.
+            event = this.calculateScore();
+
+        return event;
+
     }
 
     static getDefaultProfile(userid, profile) {

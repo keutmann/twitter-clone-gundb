@@ -27,12 +27,12 @@ const Degree = ({ user }) => {
       //setNumber(number+1);
     }
          
-    const color = user.localState.color;
-    const title = `Trust: ${user.score.trust} - Follow: ${user.score.follow} - Neutral: ${user.score.neutral} - Mute: ${user.score.mute} - Block: ${user.score.block}`;
-    var number = user.localState.degree + 1;
+    const color = user.state.color;
+    const title = (user.score) ?  `Trust: ${user.score.trust} - Follow: ${user.score.follow} - Neutral: ${user.score.neutral} - Mute: ${user.score.mute} - Block: ${user.score.block}` : "No score yet!";
+    var number = user.degree + 1;
 
-    if(user.localState.name === "neutral")
-      return null;
+    if(user.state.action === "neutral")
+      return (<p>Neutral</p>);
 
   return (
     <Wrapper onClick={clickHandler} title={title} stateColor={color} titel={title}>

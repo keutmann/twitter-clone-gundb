@@ -65,7 +65,7 @@ const UserItem = ({ id, user }) => {
 
 		{!user.isSelf ? (
 			<React.Fragment>
-				<span>{user.localState.name}</span>
+				<span>{user.state.action}</span>
 				<Degree user={user}></Degree>
 				<ProfileMenu user={user}></ProfileMenu>
 

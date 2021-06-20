@@ -38,11 +38,11 @@ const WhoToFollow = () => {
 				keyUser.isSelf = (key === loggedInUser.id);
 
 				// TODO: Implement multiple degrees
-				const relationship = keyUser.relationshipBy[loggedInUser.id]; // Base degree only
-				if(relationship) {
-					keyUser.isFollowing = relationship.action === "trust" || relationship.action === "follow";
-					keyUser.relationship = relationship;
-				}
+				// const relationship = keyUser.relationshipBy[loggedInUser.id]; // Base degree only
+				// if(relationship) {
+				// 	keyUser.isFollowing = relationship.action === "trust" || relationship.action === "follow";
+				// 	keyUser.relationship = relationship;
+				// }
 
 				return keyUser;	
 			} );

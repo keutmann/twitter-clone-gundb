@@ -3,7 +3,7 @@ import resources from '../utils/resources';
 
 const useUserAction = (targetUser, loggedInUser, actionName) => {
 
-  const [actionState, setActionState] = useState((targetUser.localState.name === actionName));
+  const [actionState, setActionState] = useState((targetUser.state.action === actionName));
 
   const setAction = (data) => {
 

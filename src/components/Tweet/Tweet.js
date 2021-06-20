@@ -11,6 +11,7 @@ import useProfile from '../../hooks/useProfile';
 import Degree from "../Buttons/Degree";
 import useUserChanged from "../../hooks/useUserChanged";
 import TweetMenu from "./TweetMenu";
+import resources from "../../utils/resources";
 
 const Wrapper = styled.div`
   display: flex;
@@ -109,7 +110,7 @@ const Tweet = ({ item }) => {
 
   const itemUri = encodeURIComponent(item.soul);
 
-  if(item.owner.localState.name === "block" || item.owner.localState.name === "mute")
+  if(item.owner.state.action === resources.node.names.block || item.owner.state.action === resources.node.names.mute)
     return null;
   
   return (
