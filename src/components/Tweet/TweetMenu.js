@@ -8,6 +8,7 @@ import BlockUser from "../MenuItems/BlockUser";
 import AnalyseGraph from "../MenuItems/AnalyseGraph";
 import TrustUser from "../MenuItems/TrustUser";
 import DeleteTweetMenuItem from "../MenuItems/DeleteTweetMenuItem";
+import ScoreGraph from "../MenuItems/ScoreGraph";
 
 const Wrapper = styled.div`
 
@@ -77,6 +78,7 @@ const TweetMenu = ({ item }) => {
           <BlockUser user={ user } popupClose={close} />
           <DeleteTweetMenuItem item={item} />
           <AnalyseGraph user={ user } popupClose={close} />
+          <ScoreGraph user={ user } popupClose={close} />
         </React.Fragment>
         )}
       </Popup> 

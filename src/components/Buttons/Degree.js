@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import useUserChanged from "../../hooks/useUserChanged";
+import ScoreGraphModal from "../Analyse/ScoreGraphModal";
 
 const Wrapper = styled.div`
   border: 1px solid ${(props) => props.theme.secondaryColor};
@@ -21,22 +22,36 @@ const Wrapper = styled.div`
 const Degree = ({ user }) => {
 
     const [,] = useUserChanged(user);
-
-    function clickHandler() {
-      // Open Visual Graph
-      //setNumber(number+1);
+    const [open, setOpen] = useState(false);
+    const openModal = () => {
+      setOpen(true);
     }
+
+    const closeModal = () => {
+      setOpen(false);
+    }
+    const saveModal = (obj) => { 
+      console.log(obj); 
+      closeModal();
+    }
+  
+  
+    // function clickHandler() {
+    //   // Open Visual Graph
+    //   //setNumber(number+1);
+    // }
          
     const color = user.state.color;
     const title = (user.score) ?  `Trust: ${user.score.trust} - Follow: ${user.score.follow} - Neutral: ${user.score.neutral} - Mute: ${user.score.mute} - Block: ${user.score.block}` : "No score yet!";
-    var number = user.degree + 1;
+    var degree = user.degree;
 
     if(user.state.action === "neutral")
       return (<p>Neutral</p>);
 
   return (
-    <Wrapper onClick={clickHandler} title={title} stateColor={color} titel={title}>
-        {number}
+    <Wrapper onClick={openModal} title={title} stateColor={color} titel={title}>
+        {degree}
+        <ScoreGraphModal open={open} onClose={closeModal} saveModal={saveModal} header={"Score Graph"} saveTitle={"Save"} user={user} />
     </Wrapper>
   );
 };

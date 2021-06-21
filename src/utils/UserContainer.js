@@ -101,6 +101,14 @@ export class UserContainer {
         return states;
     }
 
+    getReduceRelationshipBy() {
+        const find = (arr, element, index) => {
+            arr.push({ index, element });
+            return arr;
+        }
+        return this.relationshipBy.reduce(find, []);
+    }
+
     calculateScore() {
         let event = { user: this, change: false };
 
@@ -152,8 +160,11 @@ export class UserContainer {
             this.removeScore(oldRelationship, degree);
         }
 
-        this.relationshipBy[sourceUser.degree][sourceUser.id] = relationship; 
-        this.addScore(relationship, sourceUser.degree);
+        // Neutral relationship do not get added, as they are null/cancel objects.
+        if(relationship.action !== resources.node.names.neutral) {
+            this.relationshipBy[sourceUser.degree][sourceUser.id] = relationship; 
+            this.addScore(relationship, sourceUser.degree);
+        }
 
         // Only calculate score when the added relationship is relevant to the lowest degree.
         // If this.degree is lower or equal to the added relationship degree, then the added relationship is not relevant for the calculation of score.
