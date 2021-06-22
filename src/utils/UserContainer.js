@@ -16,19 +16,23 @@ export class UserContainer {
         const tweets = new DateTree(dpeep.get(resources.node.names.tweets), 'millisecond');
         const tweetsMetadata = dpeep.get(resources.node.names.tweetsMetadata);
 
+        const comments = new DateTree(dpeep.get(resources.node.names.comments), 'millisecond');
+        const commentsMetadata = dpeep.get(resources.node.names.commentsMetadata);
+
         const relationships = dpeep.get(resources.node.names.relationships);
         const relationshipsMetadata = dpeep.get(resources.node.names.relationshipsMetadata);
 
-        const claims = new DateTree(dpeep.get(resources.node.names.claims), 'month'); // Combine all claims into one month batch, estimated best performance. 
+        const claims = new DateTree(dpeep.get(resources.node.names.claims), 'month'); // Combine all claims into one month batch, estimated best performance (It's a guess). 
         const claimsMetadata = dpeep.get(resources.node.names.claimsMetadata);
+
         this.node = {
             user: gunUser,
             tweets,
             tweetsMetadata,
+            comments,
+            commentsMetadata,
             profile,
             dpeep,
-            // people,
-            // peopleMetadata,
             relationships,
             relationshipsMetadata,
             claims,

@@ -46,6 +46,7 @@ const MasterTweet = () => {
       
       setTweet(tweet);
 
+      // The comments of the Tweet node, is from the public Gun space without user write restrictions.
       const commentsTree = new DateTree(node.get(resources.node.names.comments), 'millisecond');
 
       let list = [];

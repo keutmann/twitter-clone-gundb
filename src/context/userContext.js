@@ -12,6 +12,7 @@ import 'gun/lib/then';
 
 import { sha256 } from '../utils/crypto';
 import { UserContainer } from '../utils/UserContainer';
+import { Policy } from '../utils/Policy';
 
 
 
@@ -56,7 +57,7 @@ const UserProvider = (props) => {
     const [signedUp, setSignedUp] = useState(false);
     const [user, setUser] = useState(null);
     const [users] = useState({});
-    const [usersBan] = useState({}); // An index of users that are banned to access the local database, avoiding unwanted content.
+    const [usersBlock] = useState({}); // An index of users that are banned to access the local database, avoiding unwanted content.
 
     // The feed is global, so its available for build up in the background
     const [feed, setFeed] = useState(null);
@@ -68,7 +69,7 @@ const UserProvider = (props) => {
     // Verify that a user is not banned from adding data into local database.
     function isValidUser(msg) {
         let userId = Object.keys(msg.put).filter(k => k[0] === '~').map(k => k.split('/').shift()).shift();
-        if (userId && usersBan[userId])
+        if (userId && usersBlock[userId])
             return false;
 
         return true;
@@ -263,23 +264,10 @@ const UserProvider = (props) => {
     //     []
     // );
 
+    // On call back,  data, key,
 
 
     // Methods ----------------------------------------------------------------------
-    const addFeed = React.useCallback(data => {
-        if (!data) // Data is null, we need to remove it from feed!? But what id?
-            return;
-
-        const item = createContainer(data);
-        if (feedIndex[item.soul])
-            return true;
-
-        feedIndex[item.soul] = item; // Use index, so the data only gets added to the feed once.
-        feedReady[item.soul] = item;
-        setMessageReceived(item.soul);
-        return true;
-
-    }, [createContainer, feedIndex, feedReady]); // User here is the viewer
 
     // eslint-disable-next-line no-unused-vars
     const removeFromFeed = React.useCallback((soul, key) => {
@@ -296,6 +284,32 @@ const UserProvider = (props) => {
         return true;
 
     }, [feedReady, feedIndex]); // User here is the viewer
+
+
+    const addFeed = React.useCallback((data, key, _msg, _ev) => {
+        if (!data) // Data is null, we need to remove it from feed!? But what id?
+            return;
+
+        const item = createContainer(data);
+        item.node = _msg;
+
+        if(Policy.addTweet(item, user, null)) // Check with the policy before adding to feed.
+        {
+            if (feedIndex[item.soul])
+                return true;
+
+            feedIndex[item.soul] = item; // Use index, so the data only gets added to the feed once.
+            feedReady[item.soul] = item;
+        }
+        else {
+            // The policy is to exclude the tweet, therefore remove it if already exist.
+            removeFromFeed(item.soul, null);
+        }
+
+        setMessageReceived(item.soul);
+        return true;
+
+    }, [createContainer, feedIndex, feedReady, removeFromFeed, user]); // User here is the viewer
 
     // Max degree is the number of degrees out the trust will be followed
     // First degree, people that loggedInUser is trusting. 
@@ -404,7 +418,7 @@ const UserProvider = (props) => {
             unloadClaims(targetUser);
         }
 
-        function processEvent(event, targetUser) {
+        function processEvent(event, targetUser, currentUser) {
             if(isUnfollow(event)) {
                 unfollowUser(targetUser);
             }
@@ -422,19 +436,21 @@ const UserProvider = (props) => {
             }
 
             if(isUnmute(event)) {
-
+                if(loggedInUser.id === currentUser.id) // Only unblock user, if the mute is from the logginInUser.
+                    delete usersBlock[targetUser.id]; 
             }
 
             if(isMute(event)) {
-                
+                if(loggedInUser.id === currentUser.id) // Only block user, if the mute is from the logginInUser.
+                    usersBlock[targetUser.id] = true; 
             }
 
             if(isUnblock(event)) {
-
+                delete usersBlock[targetUser.id];
             }
 
             if(isBlock(event)) {
-                
+                usersBlock[targetUser.id] = true; 
             }
         }
 
@@ -462,13 +478,13 @@ const UserProvider = (props) => {
                 currentUser.relationships[targetUser.id] = relationship; // Save the relationship to the current user as well.
 
                 if(event.change) {  // Something new happened, lets check it out.
-                    processEvent(event, targetUser);
+                    processEvent(event, targetUser, currentUser);
                 }
             });
         }
 
         // Subscribe to one self and start loading the web of trust network
-        loggedInUser.degree = 0; // logginInUser is always zero degree.
+        loggedInUser.degree = 0; // logginInUser is always zero degree as the focus point.
         trustUser(loggedInUser);
     }
 

@@ -7,9 +7,9 @@ import Input, { Wrapper } from "../Input";
 import Button from "../../styles/Button";
 import Form from "../../styles/Form";
 import { displayError } from "../../utils";
-import CoverPhoto from "../../styles/CoverPhoto";
+//import CoverPhoto from "../../styles/CoverPhoto";
 import AvatarIdenticon from "../AvatarIdenticon";
-import { uploadImage } from "../../utils";
+//import { uploadImage } from "../../utils";
 import useUser from "../../hooks/useUser";
 import Avatar from "../../styles/Avatar";
 
@@ -19,7 +19,7 @@ const EditProfileForm = ({ history }) => {
   const { user } = useUser();
 
   const [avatarState, setAvatar] = useState("");
-  const [coverPhotoState, setCoverPhoto] = useState("");
+//  const [coverPhotoState, setCoverPhoto] = useState("");
 
   const profile = user.profile;
 
@@ -43,7 +43,8 @@ const EditProfileForm = ({ history }) => {
           bio: bio.value+'',
           website: website.value+'',
           avatar: avatarState ? avatarState : avatar.value,
-          coverPhoto: coverPhotoState ? coverPhotoState : coverPhoto.value,
+          //coverPhoto: coverPhotoState ? coverPhotoState : coverPhoto.value,
+          coverPhoto: '',
           location: '',
           dob : ''
       };
@@ -148,7 +149,7 @@ const EditProfileForm = ({ history }) => {
 
   return (
     <Form lg onSubmit={handleEditProfile}>
-      <Wrapper>
+      {/* <Wrapper>
         <label>Cover Photo</label>
         <label htmlFor="cover-photo-input">
           <CoverPhoto
@@ -157,7 +158,7 @@ const EditProfileForm = ({ history }) => {
           />
         </label>
         <input type="file" id="cover-photo-input" accept="image/*" onChange={handleCoverPhoto} />
-      </Wrapper>
+      </Wrapper> */}
 
       <Wrapper>
         <label>Avatar Photo</label>

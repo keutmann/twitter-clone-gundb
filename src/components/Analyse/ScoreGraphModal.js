@@ -77,7 +77,7 @@ const ScoreGraphModal = (props) => {
                     <button className="close" onClick={close}>&times;</button>
                     <div className="header">{props.header}</div>
                     <div className="content">
-                        <ScoreGraph user={props.user} />
+                        <ScoreGraph user={props.user} close={close} />
                     </div>
                 </div>
             )}

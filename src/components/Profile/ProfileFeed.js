@@ -4,6 +4,7 @@ import Loader from "../Loader";
 import Tweet from "../Tweet/Tweet";
 import CustomResponse from "../CustomResponse";
 import useUser from "../../hooks/useUser";
+import { Policy } from "../../utils/Policy";
 
 
 const Wrapper = styled.div`
@@ -12,7 +13,7 @@ const Wrapper = styled.div`
 
 const ProfileFeed = ({ user }) => {
 
-  const { createContainer } = useUser(); 
+  const { createContainer, user: loggedInUser } = useUser(); 
 
   const [feed, setFeed] = useState();
   // Start the effect on page load
@@ -28,12 +29,15 @@ const ProfileFeed = ({ user }) => {
       // A naive implementation would have close to a billion
       // nodes and would take forever to iterate.
       // This takes only a second:
-      for await (let [ref] of tweets.iterate({ order: -1 })) {
-          let tweet = await ref.then();
-          //console.log(`${date} tweet: ${tweet}`);
+      for await (let [node] of tweets.iterate({ order: -1 })) {
+          let tweet = await node.then();
+
           if(!tweet) continue;
           const item = createContainer(tweet);
-          data.push(item);
+          item.node = node;
+
+          if(Policy.addTweet(item, loggedInUser, null)) // Check with the policy before adding to feed.
+            data.push(item);
       }
 
       setFeed(data);

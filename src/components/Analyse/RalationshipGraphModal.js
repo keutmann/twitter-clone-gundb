@@ -38,14 +38,6 @@ const RelationshipGraphModal = (props) => {
 
     const theme = useContext(ThemeContext);
 
-    // const ref = useRef();
-
-
-    // const handleSubmit = () => {
-    //     if (props.saveModal)
-    //         props.saveModal({ note: note.value });
-    // }
-
     const contentStyle = {
         width: "660px",
         background: theme.background,
@@ -77,7 +69,7 @@ const RelationshipGraphModal = (props) => {
                     <button className="close" onClick={close}>&times;</button>
                     <div className="header">{props.header}</div>
                     <div className="content">
-                        <RelationshipGraph user={props.user} />
+                        <RelationshipGraph user={props.user} close={close} />
                     </div>
                 </div>
             )}

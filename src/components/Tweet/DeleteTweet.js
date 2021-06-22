@@ -1,24 +1,26 @@
 import React from "react";
-//import { useMutation } from "@apollo/react-hooks";
 import { toast } from "react-toastify";
-// import { FEED } from "../../queries/others";
-// import { DELETE_TWEET } from "../../queries/tweet";
+import useUser from "../../hooks/useUser";
 import { TrashIcon } from "../Icons";
 
 const DeleteTweet = ({ item }) => {
 
+  const { user:loggedInUser } = useUser(); 
+
   const handleDeleteTweet = async () => {
 
-    //this.tweets.get(resources.node.names.delete).put(soul);
+    // Remove from Feed
+    // Delete text
+    // Add deleted = true property to node.
 
-    // Some things to consider,
-    // Update latest
-    // There is no "on" event on tweets for other users.
-    //item.getNode().put(null); 
 
-    //await deleteTweetMutation();
+    item.node.get("text").put("(Deleted)");
+    item.node.get("deleted").put(true);
+
     toast.success("Your tweet has been deleted");
   };
+    if(item.owner.id !== loggedInUser.id)
+      return null; 
 
   return <TrashIcon loading={false} onClick={handleDeleteTweet} />;
 };

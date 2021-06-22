@@ -3,276 +3,210 @@ import React, { useContext, useState } from "react";
 import useUser from "../../hooks/useUser";
 import { ThemeContext } from "../../context/ThemeContext";
 import resources from "../../utils/resources";
-//import AvatarIdenticon from "../AvatarIdenticon";
 import Identicon from '../../utils/Identicon';
-//import AvatarIdenticon from "../AvatarIdenticon";
-//import ReactDOM from "react-dom";
+import { useHistory } from "react-router-dom";
 
-//import "./styles.css";
-// need to import the vis network css in order to show tooltip
-//import "./network.css";
+const options = {
+  layout: {
+    hierarchical: {
+      direction: "LR",
+      sortMethod: "directed"
+    }
+  },
+  interaction:
+  {
+    dragNodes: false,
+    hover: false
+  },
+  physics: {
+    enabled: false
+  },
+  nodes: {
+    shape: 'circularImage',
+    borderWidth: 3,
+    size: 20,
+    color: {
+      border: '#222222',
+      background: '#ffffff'
+    },
+    shadow: true,
+    font: {
+      color: '#000000',
+      multi: 'md',
+      face: 'arial',
+      size: 9
+    }
+  },
+  edges: {
+    arrows: { to: true },
+    shadow: true
 
-// const options = {
-//     layout: {
-//       hierarchical: false
-//     },
-//     nodes: {
-//       shape: "circularImage",
-//       size: 20,
-//     },
-//     edges: {
-//       color: "#000000"
-//     }
-//   };
+  },
+  autoResize: true
+};
 
-  const options = {
-        layout: {
-            hierarchical: {
-                direction: "LR",
-                sortMethod: "directed"
-            }
-        },
-        interaction:
-         { 
-             dragNodes: false,
-             hover: false
-        },
-        physics: {
-            enabled: false
-        },
-        nodes: {
-            shape: 'circularImage',
-            borderWidth: 3,
-            size: 20,
-            color: {
-                border: '#222222',
-                background: '#ffffff'
-            },
-            shadow: true,
-            font: {
-                color: '#000000',
-                multi: 'md',
-                face:'arial',
-                size:9
-            }
-        },
-        edges: {
-            arrows: { to: true },
-            shadow: true
 
-        },
-        autoResize: true
-    };
-  
-  
 
-  function lineBreakText(text : string, width: number) {
-    if(!text)
-        return "";
+function lineBreakText(text: string, width: number) {
+  if (!text)
+    return "";
 
-    let r = [];
-    let count = 0;
-    let index = 0;
-    if(text.length <= width)
-        return text;
-    
-    while(index < text.length) {
-        if(count >= width) {
-            count = 0;
-            r.push("-\n");
-            continue;
-        }
+  let r = [];
+  let count = 0;
+  let index = 0;
+  if (text.length <= width)
+    return text;
 
-        r.push(text[index]);
-        count++;
-        index++;
+  while (index < text.length) {
+    if (count >= width) {
+      count = 0;
+      r.push("-\n");
+      continue;
     }
 
-    return r.join("");
+    r.push(text[index]);
+    count++;
+    index++;
+  }
+
+  return r.join("");
 }
 
 function getEdgeColors(state, theme) {
 
-  let colors = (state) ? 
-  { background: theme[state.action+"Background"], textColor: theme[state.action+"Textcolor"] } 
-  : 
-  { background: theme.neutralBackground, textColor: theme.neutralTextcolor };
+  let colors = (state) ?
+    { background: theme[state.action + "Background"], textColor: theme[state.action + "Textcolor"] }
+    :
+    { background: theme.neutralBackground, textColor: theme.neutralTextcolor };
   colors.font = { size: 12, color: theme.secondaryColor, face: theme.font };
 
   return colors;
 }
 
 function createNode(nodeId, user, theme) {
-            
-  let label = (user.profile && user.profile.displayname) ? user.profile.displayname : user.id;
-  
+
+  let label = (user.profile && user.profile.displayname) ? user.profile.displayname : user.profile.handle;
+
   let data = "";
-  if(user.profile && user.profile.avatar) 
+  if (user.profile && user.profile.avatar)
     data = user.profile.avatar;
   else {
-    let icon = new Identicon({ string:user.id, size:20 });
+    let icon = new Identicon({ string: user.id, size: 20 });
     icon.updateCanvas();
     data = icon.toDataURL();
   }
-    
 
-  let currentNode = { id: nodeId, 
-    label: lineBreakText(label,9), 
+
+  let currentNode = {
+    id: nodeId,
+    label: lineBreakText(label, 9),
     image: data,
     color: {
-      color : theme.neutralBackground
+      color: theme.neutralBackground
     },
-    font : { size: 12, color: theme.primaryColor, face: theme.font },
+    font: { size: 12, color: theme.primaryColor, face: theme.font },
     user: user
   };
   return currentNode
 }
 
 
-const ScoreGraph = ( {user }) => {
+const ScoreGraph = ({ user, close }) => {
 
+  const graphRef = React.createRef();
   const { theme } = useContext(ThemeContext);
+  const history = useHistory();
 
-    const { getUserContainerById, user: logginInUser } = useUser();
+  const { getUserContainerById, user: logginInUser } = useUser();
+  
+
+  function InitState() {
+    let nodeId = 1;
+    let nodes = [];
+    let edges = [];
+    let visited = {};
+
+    function load(localUser, childNode, relationship, level) {
+      if (visited[localUser.id])
+        return; // Do not add the same user again
+      visited[localUser.id] = true;
 
 
-    function InitState() {
-        let nodeId = 1;
-        let nodes = [];
-        let edges = [];
-        let visited = {};
+      let currentNode = createNode(nodeId++, localUser, theme);
+      nodes.push(currentNode);
 
-        function load(localUser, childNode, relationship, level) {
-            if(visited[localUser.id]) 
-              return; // Do not add the same user again
-            visited[localUser.id] = true;
+      if (childNode) {
+        const edgecolor = getEdgeColors(relationship, theme);
+        edges.push({ from: currentNode.id, to: childNode.id, arrows: "to", color: { color: edgecolor.background } })
+      }
 
-            
-            let currentNode = createNode(nodeId++, localUser, theme);
-            nodes.push(currentNode);
+      if (localUser.id === logginInUser.id)
+        return; // Stop with oneself
 
-            if(childNode) {
-              const edgecolor = getEdgeColors(relationship, theme);
-              edges.push({ from: currentNode.id, to: childNode.id, arrows: "to", color: { color: edgecolor.background } })
-            }
+      if (level < 0) // Hard exit, deadman switch
+        return;
 
-            if(localUser.id === logginInUser.id)
-              return; // Stop with oneself
 
-            if(level < 0) // Hard exit, deadman switch
-              return;
+      const tempList = localUser.getReduceRelationshipBy();
+      let first = tempList.find(x => x !== undefined && x.element !== undefined && Object.keys(x.element).length > 0);
 
-            
-            const tempList = localUser.getReduceRelationshipBy();
-            let first = tempList.find(x=> x !== undefined && x.element !== undefined && Object.keys(x.element).length > 0);
+      if (first) {
+        let relationships = first.element;
+        for (const [userId, relationship] of Object.entries(relationships)) {
 
-            if(first) {
-              let relationships = first.element;
-              for (const [userId, relationship] of Object.entries(relationships)) {
+          // All neutrals are ignored, as they are basically null/cancel objects
+          if (relationship.action === resources.node.names.neutral)
+            continue;
 
-                // All neutrals are ignored, as they are basically null/cancel objects
-                  if(relationship.action === resources.node.names.neutral)
-                    continue;
+          if (localUser.id !== user.id) {
+            // We are not looking at target User anymore therefore only trust relationships are followed back.
+            // Trust is the only relationship that allows to jump to the next user.
+            if (relationship.action !== resources.node.names.trust)
+              continue;
+          }
 
-                  if(localUser.id !== user.id) {
-                    // We are not looking at target User anymore therefore only trust relationships are followed back.
-                    // Trust is the only relationship that allows to jump to the next user.
-                    if(relationship.action !== resources.node.names.trust)
-                      continue;
-                  }
-
-                  let parentUser = getUserContainerById(userId);
-                  load(parentUser, currentNode, relationship, level-1);
-              }
-                
-
-            } else {
-              // Something is wrong!!!
-            }
+          let parentUser = getUserContainerById(userId);
+          load(parentUser, currentNode, relationship, level - 1);
         }
 
-        load(user, 4);
 
-        let r = { 
-            counter: nodes.length,
-            graph: {
-                nodes: nodes,
-                edges: edges
-            },
-            events: {}
-        }
-        return r;
+      } else {
+        // Something is wrong!!!
+      }
     }
 
-    const [state] = useState(InitState);
+    load(user, 4);
 
+    let r = {
+      counter: nodes.length,
+      graph: {
+        nodes: nodes,
+        edges: edges
+      },
+      events: {
+        select: ({ nodes, edges }) => {
+        },
+        doubleClick: ({ nodes }) => {
+          let nodeId = nodes.shift();
+          if (nodeId) {
+            let node = graphRef.current.nodes.get(nodeId);
+            history.push("/"+node.user.id);
+            close();
+          }
 
+        }
 
+      }
+    }
+    return r;
+  }
 
-    // const createNode = (x, y) => {
-    //     const color = randomColor();
-    //     setState(({ graph: { nodes, edges }, counter, ...rest }) => {
-    //       const id = counter + 1;
-    //       const from = Math.floor(Math.random() * (counter - 1)) + 1;
-    //       return {
-    //         graph: {
-    //           nodes: [
-    //             ...nodes,
-    //             { id, label: `Node ${id}`, color, x, y }
-    //           ],
-    //           edges: [
-    //             ...edges,
-    //             { from, to: id }
-    //           ]
-    //         },
-    //         counter: id,
-    //         ...rest
-    //       }
-    //     });
-    //   }
+  const [state] = useState(InitState);
 
-    //   function GetImage(id) {
-    //     //return AvatarIdenticon(id, null).toDataURL("image/png");
-    //     return '';
-    //   }
-
-
-
-
-    //   const [state, setState] = useState({
-    //     counter: 5,
-    //     graph: {
-    //       nodes: [
-    //         { id: 1, label: "Node 1", color: "#e04141" },
-    //         { id: 2, label: "Node 2", color: "#e09c41" },
-    //         { id: 3, label: "Node 3", color: "#e0df41" },
-    //         { id: 4, label: "Node 4", color: "#7be041" },
-    //         { id: 5, label: "Node 5", color: "#41e0c9" }
-    //       ],
-    //       edges: [
-    //         { from: 1, to: 2 },
-    //         { from: 1, to: 3 },
-    //         { from: 2, to: 4 },
-    //         { from: 2, to: 5 }
-    //       ]
-    //     },
-    //     events: {
-    //       select: ({ nodes, edges }) => {
-    //         console.log("Selected nodes:");
-    //         console.log(nodes);
-    //         console.log("Selected edges:");
-    //         console.log(edges);
-    //         alert("Selected node: " + nodes);
-    //       },
-    //       doubleClick: ({ pointer: { canvas } }) => {
-    //         createNode(canvas.x, canvas.y);
-    //       }
-    //     }
-    //   })
-      const { graph, events } = state;
-      return (
-        <Graph graph={graph} options={options} events={events} style={{ height: "640px", with: "640px" }} />
-      );
+  const { graph, events } = state;
+  return (
+    <Graph ref={graphRef} graph={graph} options={options} events={events} style={{ height: "640px", with: "640px" }} />
+  );
 }
 
 export default ScoreGraph;

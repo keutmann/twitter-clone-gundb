@@ -33,7 +33,7 @@ const Wrapper = styled.div`
 
   .tweet-info-user div.menu {
     float: right;
-    padding-left: 20px;
+    padding-left: 10px;
   }
 
 
@@ -121,13 +121,13 @@ const Tweet = ({ item }) => {
 
       <div className="tweet-info">
         <div className="tweet-info-user">
-          <Link to={`/${userid}`}>
-            <span className="username">{displayname}</span>
-            <span className="secondary">{`@${handle}`}</span>
-            <span className="secondary">- {moment(item.data.createdAt).fromNow()}</span>
-          </Link>
+          <Degree user={item.owner}></Degree>
           <div className="menu">
-            <Degree user={item.owner}></Degree>
+            <Link to={`/${userid}`}>
+              <span className="username">{displayname}</span>
+              <span className="secondary">{`@${handle}`}</span>
+              <span className="secondary">- {moment(item.data.createdAt).fromNow()}</span>
+            </Link>
           </div>
           <div className="menu">
             <TweetMenu item={item} />
