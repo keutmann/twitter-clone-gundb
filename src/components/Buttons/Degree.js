@@ -34,19 +34,10 @@ const Degree = ({ user }) => {
       console.log(obj); 
       closeModal();
     }
-  
-  
-    // function clickHandler() {
-    //   // Open Visual Graph
-    //   //setNumber(number+1);
-    // }
          
     const color = user.state.color;
     const title = (user.score) ?  `Trust: ${user.score.trust} - Follow: ${user.score.follow} - Neutral: ${user.score.neutral} - Mute: ${user.score.mute} - Block: ${user.score.block}` : "No score yet!";
     var degree = user.degree;
-
-    if(user.state.action === "neutral")
-      return (<p>Neutral</p>);
 
   return (
     <Wrapper onClick={openModal} title={title} stateColor={color} titel={title}>

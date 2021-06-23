@@ -4,6 +4,7 @@ import Loader from "../Loader";
 import Comment from "./Comment";
 import CustomResponse from "../CustomResponse";
 import useUser from "../../hooks/useUser";
+import { CommentContainer } from "../../utils/CommentContainer";
 
 
 const Wrapper = styled.div`
@@ -11,7 +12,7 @@ const Wrapper = styled.div`
 `;
 
 const CommentsFeed = ({ user }) => {
-  const { createContainer } = useUser(); 
+  const { getUserContainerById } = useUser(); 
   const [feed, setFeed] = useState();
 
   // Start the effect on page load
@@ -28,7 +29,7 @@ const CommentsFeed = ({ user }) => {
       for await (let [ref] of comments.iterate({ order: -1 })) {
           let data = await ref.then();
           if(!data) continue;
-          const item = createContainer(data);
+          const item = new CommentContainer(data, getUserContainerById);
           list.push(item);
       }
 

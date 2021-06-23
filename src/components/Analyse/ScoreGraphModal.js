@@ -38,14 +38,6 @@ const ScoreGraphModal = (props) => {
 
     const theme = useContext(ThemeContext);
 
-    // const ref = useRef();
-
-
-    // const handleSubmit = () => {
-    //     if (props.saveModal)
-    //         props.saveModal({ note: note.value });
-    // }
-
     const contentStyle = {
         width: "660px",
         background: theme.background,

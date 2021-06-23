@@ -12,6 +12,7 @@ import { uploadImage } from "../../utils";
 import Loader from "../Loader";
 import useUser  from '../../hooks/useUser';
 import resources from '../../utils/resources';
+import useProfile from "../../hooks/useProfile";
 
 
 const Wrapper = styled.div`
@@ -57,6 +58,7 @@ const NewTweet = () => {
   const tweet = useInput("");
 
   const { user, gun } = useUser();
+  const profile = useProfile(user);
 
   // Create a tweet on Gun
   const createTweet = async (tweet) => {
@@ -109,7 +111,7 @@ const NewTweet = () => {
   return (
     <Wrapper>
 
-      <AvatarIdenticon id={user.id} profile={user.profile} />
+      <AvatarIdenticon id={user.id} profile={profile} />
       {/* <Identicon string={user.id} size="32" /> */}
       {/* <Avatar src={profile && profile.avatar} alt="avatar" /> */}
       <form onSubmit={handleNewTweet}>

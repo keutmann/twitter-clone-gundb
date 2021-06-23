@@ -58,6 +58,7 @@ const Wrapper = styled.div`
 `;
 
 const Comment = ({ item }) => {
+
   const profile = useProfile(item.owner);
 
   const { handle, displayname } = profile;

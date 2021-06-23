@@ -70,9 +70,9 @@ const EditProfileForm = ({ history }) => {
     history.push(`/${handle}`);
   };
 
-  const handleCoverPhoto = async (e) => {
+  //const handleCoverPhoto = async (e) => {
     //setCoverPhoto(await uploadImage(e.target.files[0]));
-  };
+  //};
 
   // const photoUpload = (e: any) => {
   //   e.preventDefault();

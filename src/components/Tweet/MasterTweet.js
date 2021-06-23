@@ -9,6 +9,8 @@ import AddComment from "../Comment/AddComment";
 import useUser  from '../../hooks/useUser';
 import resources from "../../utils/resources";
 import { DateTree } from 'gun-util';
+import { TweetContainer } from "../../utils/TweetContainer";
+import { CommentContainer } from "../../utils/CommentContainer";
 
 
 const Wrapper = styled.div`
@@ -17,7 +19,7 @@ const Wrapper = styled.div`
 
 const MasterTweet = () => {
   const { handle } = useParams();
-  const { getUserContainerById, createContainer } = useUser();
+  const { getUserContainerById } = useUser();
   const [ tweet, setTweet] = useState();
   const [ comments, setComments] = useState();
   const [ tweetNode, setTweetNode] = useState();
@@ -42,7 +44,7 @@ const MasterTweet = () => {
       
       const data = await node.then(); 
 
-      const tweet = createContainer(data);
+      const tweet = new TweetContainer(data, getUserContainerById);
       
       setTweet(tweet);
 
@@ -58,7 +60,7 @@ const MasterTweet = () => {
           for(let key of keys) {
             const item = await ref.get(key).then();
             //const item = data[key];
-            const container = createContainer(item);
+            const container = new CommentContainer(item, getUserContainerById);
             list.push(container);
           };
       }
@@ -67,7 +69,7 @@ const MasterTweet = () => {
     })();
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handle, createContainer]);
+  }, [handle]);
 
   if(!tweet) return <Loader />
 

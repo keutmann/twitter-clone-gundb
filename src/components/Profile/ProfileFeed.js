@@ -5,6 +5,7 @@ import Tweet from "../Tweet/Tweet";
 import CustomResponse from "../CustomResponse";
 import useUser from "../../hooks/useUser";
 import { Policy } from "../../utils/Policy";
+import { TweetContainer } from "../../utils/TweetContainer";
 
 
 const Wrapper = styled.div`
@@ -13,27 +14,28 @@ const Wrapper = styled.div`
 
 const ProfileFeed = ({ user }) => {
 
-  const { createContainer, user: loggedInUser } = useUser(); 
+  const { getUserContainerById, user: loggedInUser } = useUser(); 
 
-  const [feed, setFeed] = useState();
+  const [feed, setFeed] = useState(undefined);
   // Start the effect on page load
   // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
 
-    if(feed) 
-      return; // The feed has been loaded, do not reload
+    setFeed(undefined); // Reset feed, in case of old data.
 
     const tweets = user.node.tweets;
     (async () => {
       let data = [];
       // A naive implementation would have close to a billion
       // nodes and would take forever to iterate.
-      // This takes only a second:
+      // This takes only a second to iterate the first items:
+      
+      // TODO: Limit the number items loaded. This may be move to a load initialy and then more items. 
       for await (let [node] of tweets.iterate({ order: -1 })) {
           let tweet = await node.then();
 
           if(!tweet) continue;
-          const item = createContainer(tweet);
+          const item = new TweetContainer(tweet, getUserContainerById);
           item.node = node;
 
           if(Policy.addTweet(item, loggedInUser, null)) // Check with the policy before adding to feed.
@@ -41,15 +43,10 @@ const ProfileFeed = ({ user }) => {
       }
 
       setFeed(data);
-      // Output:
-      // Sat Jan 21 1995 14:02:00 GMT+0000 event: good times
-      // Sun Aug 23 2015 23:45:00 GMT+0000 event: ultimate
-      // Thu Jan 16 2020 05:45:00 GMT+0000 event: earlybird
     })();
 
-
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [user])
 
   if(!feed) return <Loader />; // Wait for the feed to be loaded
 

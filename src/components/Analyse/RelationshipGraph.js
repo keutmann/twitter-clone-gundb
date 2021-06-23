@@ -46,8 +46,7 @@ function lineBreakText(text: string, width: number) {
   return r.join("");
 }
 
-function getColors(relationship, theme) {
-  theme = theme.theme;
+function getColors(relationship, theme) { 
   let colors = (relationship) ?
     { background: theme[relationship.action + "Background"], textColor: theme[relationship.action + "Textcolor"] }
     :

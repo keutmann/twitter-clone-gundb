@@ -2,6 +2,7 @@ import React from "react";
 import { toast } from "react-toastify";
 import useUser from "../../hooks/useUser";
 import { TrashIcon } from "../Icons";
+import 'gun/lib/path';
 
 const DeleteTweet = ({ item }) => {
 
@@ -12,8 +13,7 @@ const DeleteTweet = ({ item }) => {
     // Remove from Feed
     // Delete text
     // Add deleted = true property to node.
-
-
+ 
     item.node.get("text").put("(Deleted)");
     item.node.get("deleted").put(true);
 

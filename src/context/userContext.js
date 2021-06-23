@@ -13,6 +13,7 @@ import 'gun/lib/then';
 import { sha256 } from '../utils/crypto';
 import { UserContainer } from '../utils/UserContainer';
 import { Policy } from '../utils/Policy';
+import { TweetContainer } from '../utils/TweetContainer';
 
 
 
@@ -183,41 +184,6 @@ const UserProvider = (props) => {
         [gun, users, getUserContainer]
     );
 
-    // // A slim user object, optimized for performance
-    // const getSlimUser = React.useCallback(
-    //     (userId) => {
-    //         return getUserContainerById(userId);
-
-    //         //return users[userId] || (users[userId] = Object.assign({}, users[userId], { id: userId }, relationshipUserObj()));
-    //     },
-    //     [getUserContainerById]
-    // );
-
-
-    const createContainer = React.useCallback((data) => {
-        const soul = Gun.node.soul(data);
-        const soulElem = soul.split('/');
-
-        const userId = soulElem.shift();
-        soulElem.shift(); // Just shift to next element
-        const category = soulElem.shift();
-        const itemId = soulElem.join('/');
-
-        const ownerContainer = getUserContainerById(userId);
-
-        const item = {
-            soul: soul,
-            id: itemId,
-            category: category,
-            data: data,
-            owner: ownerContainer,
-            confirmedBy: {}
-        }
-        return item;
-    },
-        [getUserContainerById]
-    );
-
 
     const userSignUp = React.useCallback(
         async (signedUpData) => {
@@ -290,8 +256,7 @@ const UserProvider = (props) => {
         if (!data) // Data is null, we need to remove it from feed!? But what id?
             return;
 
-        const item = createContainer(data);
-        item.node = _msg;
+        const item = new TweetContainer(data, getUserContainerById);
 
         if(Policy.addTweet(item, user, null)) // Check with the policy before adding to feed.
         {
@@ -309,7 +274,7 @@ const UserProvider = (props) => {
         setMessageReceived(item.soul);
         return true;
 
-    }, [createContainer, feedIndex, feedReady, removeFromFeed, user]); // User here is the viewer
+    }, [feedIndex, feedReady, getUserContainerById, removeFromFeed, user]); // User here is the viewer
 
     // Max degree is the number of degrees out the trust will be followed
     // First degree, people that loggedInUser is trusting. 
@@ -577,13 +542,13 @@ const UserProvider = (props) => {
             user, gun, isLoggedIn, feed, feedIndex, feedReady, messageReceived, userSignUp, loginPassword,
             logout, setFeed, getUserContainerById,
             followUser, setMessageReceived, resetFeedReady, loadFeed,
-            createContainer
+            
         }),
         [
             user, gun, isLoggedIn, feed, feedIndex, feedReady, messageReceived,
             userSignUp, loginPassword, logout, setFeed, getUserContainerById,
             followUser, setMessageReceived, resetFeedReady, loadFeed,
-            createContainer
+             
         ]
     );
 

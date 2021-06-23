@@ -29,7 +29,7 @@ const MoreBtn = React.forwardRef(({ open, ...props }, ref) => {
 });
 
 const MorePopup = () => {
-  const theme = useContext(ThemeContext);
+  const { theme } = useContext(ThemeContext);
 
   const contentStyle = {
     width: "160px",

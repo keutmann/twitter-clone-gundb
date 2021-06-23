@@ -7,7 +7,7 @@ const useProfile = (user) => {
     useEffect(() => {
 
       if(!user.profile.loaded) {
-        user.loadProfile((profile) => setProfile(profile));
+        user.loadProfile(setProfile);
       } else {
         setProfile(profile);
       }
