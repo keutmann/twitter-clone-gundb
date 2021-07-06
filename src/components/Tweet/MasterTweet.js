@@ -19,7 +19,7 @@ const Wrapper = styled.div`
 
 const MasterTweet = () => {
   const { handle } = useParams();
-  const { getUserContainerById } = useUser();
+  const { usersManager } = useUser();
   const [ tweet, setTweet] = useState();
   const [ comments, setComments] = useState();
   const [ tweetNode, setTweetNode] = useState();
@@ -32,19 +32,21 @@ const MasterTweet = () => {
       const soul = decodeURIComponent(handle);
       const soulElem = soul.split('/');
       const userId = soulElem.shift();
-      const userContainer = getUserContainerById(userId);
+      const userContainer = usersManager.getUserContainerById(userId);
       
       soulElem.shift(); // Shift dpeep
       soulElem.shift(); // Shift tweets
       
-      const dateString = `${soulElem[0]}-${soulElem[1]}-${soulElem[2]}T${soulElem[3]}:${soulElem[4]}:${soulElem[5]}.${soulElem[6]}Z`
+      //const dateString = `${soulElem[0]}-${soulElem[1]}-${soulElem[2]}T${soulElem[3]}:${soulElem[4]}:${soulElem[5]}.${soulElem[6]}Z`
+      const dateString = soulElem.shift();
 
       const node = userContainer.node.tweets.get(dateString);
       setTweetNode(node);
       
       const data = await node.then(); 
 
-      const tweet = new TweetContainer(data, getUserContainerById);
+      const tweet = new TweetContainer(data);
+      tweet.setOwner(usersManager.getUserContainerById(tweet.userId));
       
       setTweet(tweet);
 
@@ -60,7 +62,8 @@ const MasterTweet = () => {
           for(let key of keys) {
             const item = await ref.get(key).then();
             //const item = data[key];
-            const container = new CommentContainer(item, getUserContainerById);
+            const container = new CommentContainer(item);
+            container.setOwner(usersManager.getUserContainerById(container.userId));
             list.push(container);
           };
       }

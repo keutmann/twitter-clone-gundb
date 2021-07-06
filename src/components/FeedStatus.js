@@ -14,18 +14,29 @@ const Wrapper = styled.div`
 
 const FeedStatus = () => {
 
-  const { feedReady, messageReceived, loadFeed } = useUser(); 
+  const { feedManager } = useUser(); 
 
-  const [ messageCount, setMessageCount] = useState(0);
+  const [messageCount, setMessageCount] = useState(0);
   
+  const update = () => feedManager.update();
+
   // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
 
-    const items = Object.values(feedReady);
-    setMessageCount(items.length);
-    
+    const setCountCallback = (item) => {
+      setMessageCount(feedManager.stagingNewCount);
+    };
+
+    feedManager.onFeedUdated.registerCallback(setCountCallback);
+    feedManager.onNewTweetAdded.registerCallback(setCountCallback);
+   
+    return () => {
+      feedManager.onFeedUdated.unregisterCallback(setCountCallback);
+      feedManager.onNewTweetAdded.unregisterCallback(setCountCallback);
+    };
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messageReceived])
+  }, [])
 
   
   if(messageCount === 0) return null;
@@ -33,7 +44,7 @@ const FeedStatus = () => {
 
   return (
     <Wrapper>
-        <NavLink to='/' onClick={loadFeed}>
+       <NavLink to='/' onClick={update}>
         New messages: {messageCount}
         </NavLink>
     </Wrapper>

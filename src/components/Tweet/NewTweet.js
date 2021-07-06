@@ -69,10 +69,11 @@ const NewTweet = () => {
 
     tweet.createdAt = tweetId;
 
-    const tweetNode = user.node.tweets.get(date); 
-    const tweetData = await tweetNode.put(tweet).then(); // Add Tweet to DateTree and wait for the Gun data object.
+    const tweetNode = user.node.tweets.get(tweetId); 
+    //await tweetNode.put(tweet).then(); // Add Tweet to DateTree and wait for the Gun data object.
+    tweetNode.put(tweet); // Add Tweet to DateTree and wait for the Gun data object.
 
-    user.node.tweetsMetadata.get(resources.node.names.latest).put(tweetData); // Add the tweet to the latest tweets for all the subscribtions.
+    //user.node.tweetsMetadata.get(resources.node.names.latest).put(tweetData); // Add the tweet to the latest tweets for all the subscribtions.
 
     // Add comments object from the Gun root, as this is writeable for everone.
     const comments = gun.get(resources.node.names.dpeep).get(resources.node.names.comments).get(user.id).get(tweetId);

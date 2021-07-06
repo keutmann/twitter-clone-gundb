@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import { CheckCircle, CheckCircleFill, XCircle, XCircleFill } from 'react-bootstrap-icons';
-import useUser from "../../hooks/useUser";
+import { CheckCircle, CheckCircleFill, XCircle, XCircleFill, FlagFill } from 'react-bootstrap-icons';
+//import useUser from "../../hooks/useUser";
 
 
 const Wrapper = styled.div`
@@ -25,7 +25,7 @@ const Wrapper = styled.div`
 
 
 const ConfirmReject = ({ id, item }) => {
-  const { user } = useUser();
+  //const { user } = useUser();
 
   const [confirmed, setConfirmed] = useState(item.confirmed || false);
   const [confirmedCountState, setConfirmedCount] = useState(item.confirmCount);
@@ -38,7 +38,7 @@ const ConfirmReject = ({ id, item }) => {
       setConfirmedCount(confirmedCountState - 1);
     } else {
       setConfirmedCount(confirmedCountState + 1);
-      user.node.confirm.get(item.soul).put({ value: 1});
+      //user.node.confirm.get(item.soul).put({ value: 1});
     }
 
 
@@ -54,7 +54,7 @@ const ConfirmReject = ({ id, item }) => {
       setRejectedCount(rejectedCountState - 1);
     } else {
       setRejectedCount(rejectedCountState + 1);
-      user.node.confirm.get(item.soul).put({ value: -1});
+      //user.node.confirm.get(item.soul).put({ value: -1});
     }
 
     if(confirmed)
@@ -88,6 +88,9 @@ const ConfirmReject = ({ id, item }) => {
         )}
         {rejectedCountState ? rejectedCountState : null}
       </span>
+      </div>
+      <div>
+        <FlagFill color="green"></FlagFill>
       </div>
     </Wrapper>
   );

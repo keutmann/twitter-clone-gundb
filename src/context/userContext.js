@@ -2,24 +2,28 @@ import React, { useEffect, useState, createContext } from 'react';
 import resources from '../utils/resources';
 import Gun from 'gun/gun';
 import sea from 'gun/sea';
-// import 'gun/lib/radix';
-// import 'gun/lib/radisk';
-// import 'gun/lib/store';
-// import 'gun/lib/rindexed';
+import 'gun/lib/radix';
+import 'gun/lib/radisk';
+import 'gun/lib/store';
+import 'gun/lib/rindexed';
 import 'gun/lib/then';
 // import Rad from 'gun/lib/radisk'; 
 // import Radix from 'gun/lib/radix'; 
 
 import { sha256 } from '../utils/crypto';
-import { UserContainer } from '../utils/UserContainer';
-import { Policy } from '../utils/Policy';
-import { TweetContainer } from '../utils/TweetContainer';
+// import { UserContainer } from '../utils/UserContainer';
+// import { Policy } from '../utils/Policy';
+// import { TweetContainer } from '../utils/TweetContainer';
+// import moment from 'moment';
+import { UsersManager } from '../utils/UsersManager';
+import { FeedManager } from '../utils/FeedManager';
 
 
 
 
 const dpeepUserKeys = 'dpeepUserKeys';
-const serverpeers = ['http://localhost:8765/gun'];
+//const serverpeers = ['http://localhost:8765/gun'];
+const serverpeers = [];
 
 
 const UserContext = createContext(null);
@@ -50,31 +54,34 @@ const UserProvider = (props) => {
 
 
 
-    const [gun] = useState(Gun({ peers: serverpeers, isValid: isValidUser })); //{ peers: serverpeers, localStorage: false }{peers: ["http://server-ip-or-hostname:8080/gun"]}
+    const [gun] = useState(Gun({localStorage: false, peers: serverpeers, isValid: isValidUser })); //{ peers: serverpeers, localStorage: false }{peers: ["http://server-ip-or-hostname:8080/gun"]}
     const [gunUser, setGunUser] = useState(null);
     const [isLoggedIn, setIsLoggedIn] = useState(null);
 
     const [authenticate, setAuthenticate] = useState(false);
     const [signedUp, setSignedUp] = useState(false);
     const [user, setUser] = useState(null);
-    const [users] = useState({});
-    const [usersBlock] = useState({}); // An index of users that are banned to access the local database, avoiding unwanted content.
+    const [usersManager] = useState(new UsersManager(gun));
+    //const [usersBlock] = useState({}); // An index of users that are banned to access the local database, avoiding unwanted content.
 
     // The feed is global, so its available for build up in the background
-    const [feed, setFeed] = useState(null);
-    const [feedIndex, setFeedIndex] = useState({});
-    const [feedReady] = useState({});
+    //const [feed, setFeed] = useState(null);
+    const [feedManager] = useState(new FeedManager(usersManager));
+    //const [feedIndex, setFeedIndex] = useState({});
+    //const [feedReady] = useState({});
     const [messageReceived, setMessageReceived] = useState(null);
 
 
     // Verify that a user is not banned from adding data into local database.
     function isValidUser(msg) {
-        let userId = Object.keys(msg.put).filter(k => k[0] === '~').map(k => k.split('/').shift()).shift();
-        if (userId && usersBlock[userId])
-            return false;
+        // let userId = Object.keys(msg.put).filter(k => k[0] === '~').map(k => k.split('/').shift()).shift();
+        // if (userId && usersBlock[userId])
+        //     return false;
 
         return true;
     }
+
+
 
     // // Clear out the content from a user in the local Database, avoiding unwanted content.
     // const removeUserFromLocalDB = React.useCallback(
@@ -145,8 +152,7 @@ const UserProvider = (props) => {
         setGunUser(null);
         setIsLoggedIn(false);
         setUser(null);
-        setFeed([]);
-        setFeedIndex({});
+        feedManager.reset();
         setAuthenticate(false);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [gunUser]);
@@ -155,34 +161,34 @@ const UserProvider = (props) => {
 
 
 
-    const getUserContainer = React.useCallback(
-        (gunUser) => {
+    // const getUserContainer = React.useCallback(
+    //     (gunUser) => {
 
-            let userContainer = new UserContainer(gunUser);
+    //         let userContainer = new UserContainer(gunUser);
 
-            let pubId = userContainer.id;
-            users[pubId] = userContainer;
+    //         let pubId = userContainer.id;
+    //         users[pubId] = userContainer;
 
-            return userContainer;
-        },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [users]
-    );
+    //         return userContainer;
+    //     },
+    //     // eslint-disable-next-line react-hooks/exhaustive-deps
+    //     [users]
+    // );
 
-    const getUserContainerById = React.useCallback(
-        (pubId) => {
-            if (pubId[0] === '~')
-                pubId = pubId.substring(1);
+    // const getUserContainerById = React.useCallback(
+    //     (pubId) => {
+    //         if (pubId[0] === '~')
+    //             pubId = pubId.substring(1);
 
-            const user = users[pubId];
-            if (user && user.node) return user; // Just return an exiting container is exist and node is set
+    //         const user = users[pubId];
+    //         if (user && user.node) return user; // Just return an exiting container is exist and node is set
 
-            const gunUser = gun.user(pubId);
+    //         const gunUser = gun.user(pubId);
 
-            return getUserContainer(gunUser); // Create a new one
-        },
-        [gun, users, getUserContainer]
-    );
+    //         return getUserContainer(gunUser); // Create a new one
+    //     },
+    //     [gun, users, getUserContainer]
+    // );
 
 
     const userSignUp = React.useCallback(
@@ -199,12 +205,12 @@ const UserProvider = (props) => {
         [isLoggedIn, signup, setSignedUp]
     );
 
-    const followUser = React.useCallback(async (pubId) => {
-        if (!isLoggedIn || user === null) return;
+    // const followUser = React.useCallback(async (pubId) => {
+    //     if (!isLoggedIn || user === null) return;
 
-        user.followNode.get(pubId).put(gun.user(pubId));
+    //     user.followNode.get(pubId).put(gun.user(pubId));
 
-    }, [isLoggedIn, user, gun]);
+    // }, [isLoggedIn, user, gun]);
 
     // const loadProfile = React.useCallback(
     //     (user, cb) => {
@@ -236,228 +242,252 @@ const UserProvider = (props) => {
     // Methods ----------------------------------------------------------------------
 
     // eslint-disable-next-line no-unused-vars
-    const removeFromFeed = React.useCallback((soul, key) => {
-        if (!soul) // Data is null, we need to remove it from feed!? But what id?
-            return false;
+    // const removeFromFeed = React.useCallback((soul, key) => {
+    //     if (!soul) // Data is null, we need to remove it from feed!? But what id?
+    //         return false;
 
-        if (!feedIndex[soul])
-            return false;
+    //     if (!feedIndex[soul])
+    //         return false;
 
-        delete feedIndex[soul];
-        delete feedReady[soul];
-        setMessageReceived(soul);
+    //     delete feedIndex[soul];
+    //     delete feedReady[soul];
+    //     setMessageReceived(soul);
 
-        return true;
+    //     return true;
 
-    }, [feedReady, feedIndex]); // User here is the viewer
-
-
-    const addFeed = React.useCallback((data, key, _msg, _ev) => {
-        if (!data) // Data is null, we need to remove it from feed!? But what id?
-            return;
-
-        const item = new TweetContainer(data, getUserContainerById);
-
-        if(Policy.addTweet(item, user, null)) // Check with the policy before adding to feed.
-        {
-            if (feedIndex[item.soul])
-                return true;
-
-            feedIndex[item.soul] = item; // Use index, so the data only gets added to the feed once.
-            feedReady[item.soul] = item;
-        }
-        else {
-            // The policy is to exclude the tweet, therefore remove it if already exist.
-            removeFromFeed(item.soul, null);
-        }
-
-        setMessageReceived(item.soul);
-        return true;
-
-    }, [feedIndex, feedReady, getUserContainerById, removeFromFeed, user]); // User here is the viewer
-
-    // Max degree is the number of degrees out the trust will be followed
-    // First degree, people that loggedInUser is trusting. 
-    // Second degree is people of trusted people that loggedInUser is trusting.
-    async function initializeRelationships(loggedInUser, maxDegree = 2) {
-        console.log(`Subscribing to users Trust - GUN Style`);
-        //const userFound = {}; // Make sure only to process the user once.
-
-        console.log("initializeRelationships: " + loggedInUser.id);
-        // Get a slim user object and not the full container 
-        const getItem = (key) => feedIndex[key] || (feedIndex[key] = { claimedBy: {} });
-
-        function addClaim(claim, key, userId, localDegree) {
-            const item = getItem(key);
-            claim.localDegree = localDegree;
-            item.claimedBy[userId] = claim;
-        }
-
-        // TODO: The cascading effect of Trust and Untrust, needs to be done.
-        function unloadClaims(targetUser) {
-            // Remove the trust from TargetUser on all items.
-            for (const [,item] of Object.entries(feedIndex)) {
-                if(item.claimedBy) {
-                    delete item.claimedBy[targetUser.id];
-                    item.claimsChanged = true;
-                }
-            }; // Remove all claims
-        }
+    // }, [feedReady, feedIndex]); // User here is the viewer
 
 
-        async function loadClaims(targetUser) {
-            const claimTree = targetUser.node.claims; // relationships is of Type DateTree
-            for await (let [month] of claimTree.iterate({ order: -1 })) {
+    // const addFeed = React.useCallback((data, key, _msg, _ev) => {
+    //     if (!data) // Data is null, we need to remove it from feed!? But what id?
+    //         return;
 
-                month.once().map().once((claim, key) => {
-                    addClaim(claim, key, targetUser.id, targetUser.degree);
-                });
-            }
-        }
+    //     const item = new TweetContainer(data, getUserContainerById);
+
+    //     if(Policy.addTweet(item, user, null)) // Check with the policy before adding to feed.
+    //     {
+    //         if (feedIndex[item.soul])
+    //             return true;
+
+    //         feedIndex[item.soul] = item; // Use index, so the data only gets added to the feed once.
+    //         feedReady[item.soul] = item;
+    //     }
+    //     else {
+    //         // The policy is to exclude the tweet, therefore remove it if already exist.
+    //         removeFromFeed(item.soul, null);
+    //     }
+
+    //     setMessageReceived(item.soul);
+    //     return true;
+
+    // }, [feedIndex, feedReady, getUserContainerById, removeFromFeed, user]); // User here is the viewer
+
+    // // Max degree is the number of degrees out the trust will be followed
+    // // First degree, people that loggedInUser is trusting. 
+    // // Second degree is people of trusted people that loggedInUser is trusting.
+    // async function initializeRelationships(loggedInUser, maxDegree = 2) {
+    //     console.log(`Subscribing to users Trust - GUN Style`);
+    //     //const userFound = {}; // Make sure only to process the user once.
+
+    //     console.log("initializeRelationships: " + loggedInUser.id);
+    //     // Get a slim user object and not the full container 
+    //     const getItem = (key) => feedIndex[key] || (feedIndex[key] = { claimedBy: {} });
+
+    //     function addClaim(claim, key, user, localDegree) {
+    //         const item = getItem(key);
+    //         claim.localDegree = localDegree;
+    //         item.claimedBy[user.id] = claim;
+    //         user.claims[key] = claim;
+    //     }
+
+    //     // TODO: The cascading effect of Trust and Untrust, needs to be done.
+    //     async function unloadClaims(targetUser) {
+
+    //         // Remove the trust from TargetUser on all items.
+    //         for (const [key,] of Object.entries(user.claims)) {
+    //             let item = getItem(key);
+    //             delete item.claimedBy[targetUser.id];
+    //             item.claimsChanged = true;
+    //         }; // Remove all claims
+
+    //         // TODO: Subscibetion should be recorded, so its possible to unsubscribe again.
+    //         // Current month and last month. 
+    //         var search = {
+    //             gte: moment().add(-2, 'month').format("YYYY-MM-DD"),
+    //             lt: moment().add(1, 'month').format("YYYY-MM-DD"),
+    //             order: -1
+    //         }
+
+    //         const claimTree = targetUser.node.claims; // relationships is of Type DateTree
+
+    //         for await (let [month] of claimTree.iterate(search)) {
+    //             month.off();
+    //         }
+    //     }
+
+    //     // Most tweets are only looked at within a few days.
+    //     // This makes it unnecessary to load all claims from a single user from all time.
+    //     // The claims can be added on the month node and on a tweet based node. 
+    //     async function loadClaims(targetUser) {
+    //         const claimTree = targetUser.node.claims; // relationships is of Type DateTree
+
+    //         // Current month and last month.
+    //         var search = {
+    //             gte: moment().add(-2, 'month').format("YYYY-MM-DD"),
+    //             lt: moment().add(1, 'month').format("YYYY-MM-DD"),
+    //             order: -1
+    //         }
+
+    //         for await (let [month] of claimTree.iterate(search)) {
+    //             month.map().on((claim, key) => {
+    //                 addClaim(claim, key, targetUser, targetUser.degree);
+    //             });
+    //         }
+    //     }
 
 
 
-        function isTrust(event) {
-            return event.previousState.action !== resources.node.names.trust
-                && event.user.state.action === resources.node.names.trust;
-        }
+    //     function isTrust(event) {
+    //         return event.previousState.action !== resources.node.names.trust
+    //             && event.user.state.action === resources.node.names.trust;
+    //     }
 
-        function isUntrust(event) {
-            return event.previousState.action === resources.node.names.trust
-                && event.user.state.action !== resources.node.names.trust;
-        }
+    //     function isUntrust(event) {
+    //         return event.previousState.action === resources.node.names.trust
+    //             && event.user.state.action !== resources.node.names.trust;
+    //     }
 
-        function isFollow(event) {
-            return event.previousState.action !== resources.node.names.follow
-                && event.user.state.action === resources.node.names.follow;
-        }
+    //     function isFollow(event) {
+    //         return event.previousState.action !== resources.node.names.follow
+    //             && event.user.state.action === resources.node.names.follow;
+    //     }
 
-        function isUnfollow(event) {
-            return event.previousState.action === resources.node.names.follow
-                && event.user.state.action !== resources.node.names.follow;
-        }
+    //     function isUnfollow(event) {
+    //         return event.previousState.action === resources.node.names.follow
+    //             && event.user.state.action !== resources.node.names.follow;
+    //     }
 
-        function isMute(event) {
-            return event.previousState.action !== resources.node.names.mute
-                && event.user.state.action === resources.node.names.mute;
-        }
+    //     function isMute(event) {
+    //         return event.previousState.action !== resources.node.names.mute
+    //             && event.user.state.action === resources.node.names.mute;
+    //     }
 
-        function isUnmute(event) {
-            return event.previousState.action === resources.node.names.mute
-                && event.user.state.action !== resources.node.names.mute;
-        }
+    //     function isUnmute(event) {
+    //         return event.previousState.action === resources.node.names.mute
+    //             && event.user.state.action !== resources.node.names.mute;
+    //     }
 
-        function isBlock(event) {
-            return event.previousState.action !== resources.node.names.block 
-                && event.user.state.action === resources.node.names.block;
-        }
+    //     function isBlock(event) {
+    //         return event.previousState.action !== resources.node.names.block 
+    //             && event.user.state.action === resources.node.names.block;
+    //     }
 
-        function isUnblock(event) {
-            return event.previousState.action === resources.node.names.block
-                && event.user.state.action !== resources.node.names.block;
-        }
+    //     function isUnblock(event) {
+    //         return event.previousState.action === resources.node.names.block
+    //             && event.user.state.action !== resources.node.names.block;
+    //     }
 
-        function followUser(targetUser) {
-            targetUser.node.tweetsMetadata.get(resources.node.names.latest).on(addFeed); // Load the latest tweet from the user.
-        }
+    //     function followUser(targetUser) {
+    //         targetUser.node.tweetsMetadata.get(resources.node.names.latest).on(addFeed); // Load the latest tweet from the user.
+    //     }
 
-        function unfollowUser(targetUser) {
-            targetUser.node.tweetsMetadata.get(resources.node.names.latest).off(); // Unfollow target user.
-        }
+    //     function unfollowUser(targetUser) {
+    //         targetUser.node.tweetsMetadata.get(resources.node.names.latest).off(); // Unfollow target user.
+    //     }
 
-        function trustUser(targetUser) {
-            followUser(targetUser);
+    //     function trustUser(targetUser) {
+    //         followUser(targetUser);
 
-            targetUser.node.claimsMetadata.get(resources.node.names.latest).on((v, k) => addClaim(v, k, targetUser.id, targetUser.degree)); // Load the latest tweet from the user.
-            // Load claims first async!
-            loadClaims(targetUser);
+    //         targetUser.node.claimsMetadata.get(resources.node.names.latest).on((v, k) => addClaim(v, k, targetUser, targetUser.degree)); // Load the latest tweet from the user.
+    //         // Load claims first async!
+    //         loadClaims(targetUser);
 
-            load(targetUser);
-        }
+    //         load(targetUser);
+    //     }
 
-        function untrustUser(targetUser) {
-            unfollowUser(targetUser);
+    //     function untrustUser(targetUser) {
+    //         unfollowUser(targetUser);
 
-            targetUser.node.claimsMetadata.get(resources.node.names.latest).off();
-            targetUser.processed = false;
-            unloadClaims(targetUser);
-        }
+    //         targetUser.node.claimsMetadata.get(resources.node.names.latest).off();
+    //         targetUser.processed = false;
+    //         unloadClaims(targetUser);
+    //     }
 
-        function processEvent(event, targetUser, currentUser) {
-            if(isUnfollow(event)) {
-                unfollowUser(targetUser);
-            }
+    //     function processEvent(event, targetUser, currentUser) {
+    //         if(isUnfollow(event)) {
+    //             unfollowUser(targetUser);
+    //         }
 
-            if(isFollow(event)) {
-                followUser(targetUser);
-            }
+    //         if(isFollow(event)) {
+    //             followUser(targetUser);
+    //         }
             
-            if(isTrust(event)) {
-                trustUser(targetUser);
-            }
+    //         if(isTrust(event)) {
+    //             trustUser(targetUser);
+    //         }
             
-            if(isUntrust(event)) {
-                untrustUser(targetUser);
-            }
+    //         if(isUntrust(event)) {
+    //             untrustUser(targetUser);
+    //         }
 
-            if(isUnmute(event)) {
-                if(loggedInUser.id === currentUser.id) // Only unblock user, if the mute is from the logginInUser.
-                    delete usersBlock[targetUser.id]; 
-            }
+    //         if(isUnmute(event)) {
+    //             if(loggedInUser.id === currentUser.id) // Only unblock user, if the mute is from the logginInUser.
+    //                 delete usersBlock[targetUser.id]; 
+    //         }
 
-            if(isMute(event)) {
-                if(loggedInUser.id === currentUser.id) // Only block user, if the mute is from the logginInUser.
-                    usersBlock[targetUser.id] = true; 
-            }
+    //         if(isMute(event)) {
+    //             if(loggedInUser.id === currentUser.id) // Only block user, if the mute is from the logginInUser.
+    //                 usersBlock[targetUser.id] = true; 
+    //         }
 
-            if(isUnblock(event)) {
-                delete usersBlock[targetUser.id];
-            }
+    //         if(isUnblock(event)) {
+    //             delete usersBlock[targetUser.id];
+    //         }
 
-            if(isBlock(event)) {
-                usersBlock[targetUser.id] = true; 
-            }
-        }
+    //         if(isBlock(event)) {
+    //             usersBlock[targetUser.id] = true; 
+    //         }
+    //     }
 
-        async function load(currentUser) {
-            console.log("initializeRelationships - load: " + currentUser.id);
+    //     async function load(currentUser) {
+    //         console.log("initializeRelationships - load: " + currentUser.id);
 
-            if (currentUser.degree > maxDegree)
-                return; // Exit as the search ends here
+    //         if (currentUser.degree > maxDegree)
+    //             return; // Exit as the search ends here
 
-            if(currentUser.processed)
-                return; // Exit as the current user already has its relationships processed.
+    //         if(currentUser.processed)
+    //             return; // Exit as the current user already has its relationships processed.
 
-            currentUser.processed = true; // Do not processed this user next time
+    //         currentUser.processed = true; // Do not processed this user next time
 
-            // Load relationships - map() automatically subscibes to changes in the relationship node
-            currentUser.node.relationships.map().on((relationshipGun, key) => {
-                if (key[0] !== '~') return; // Ignore noise data from the relationships node, only process users.
+    //         // Load relationships - map() automatically subscibes to changes in the relationship node
+    //         currentUser.node.relationships.map().on((relationshipGun, key) => {
+    //             if (key[0] !== '~') return; // Ignore noise data from the relationships node, only process users.
 
-                // Copy the relationship, as the source object is updated automatically by Gun on change, making detecting changes impossible.
-                const relationship = Object.assign({}, relationshipGun); 
+    //             // Copy the relationship, as the source object is updated automatically by Gun on change, making detecting changes impossible.
+    //             const relationship = Object.assign({}, relationshipGun); 
 
-                const targetUser = getUserContainerById(key);
+    //             const targetUser = getUserContainerById(key);
 
-                const event = targetUser.addRelationship(relationship, currentUser, undefined);
-                currentUser.relationships[targetUser.id] = relationship; // Save the relationship to the current user as well.
+    //             const event = targetUser.addRelationship(relationship, currentUser, undefined);
+    //             currentUser.relationships[targetUser.id] = relationship; // Save the relationship to the current user as well.
 
-                if(event.change) {  // Something new happened, lets check it out.
-                    processEvent(event, targetUser, currentUser);
-                }
-            });
-        }
+    //             if(event.change) {  // Something new happened, lets check it out.
+    //                 processEvent(event, targetUser, currentUser);
+    //             }
+    //         });
+    //     }
 
-        // Subscribe to one self and start loading the web of trust network
-        loggedInUser.degree = 0; // logginInUser is always zero degree as the focus point.
-        trustUser(loggedInUser);
-    }
+    //     // Subscribe to one self and start loading the web of trust network
+    //     loggedInUser.degree = 0; // logginInUser is always zero degree as the focus point.
+    //     trustUser(loggedInUser);
+    // }
 
 
-    const resetFeedReady = React.useCallback(() => {
-        Object.keys(feedReady).forEach(p => delete feedReady[p]);
-        setMessageReceived(null);
-    }, [feedReady]);
+    // const resetFeedReady = React.useCallback(() => {
+    //     Object.keys(feedReady).forEach(p => delete feedReady[p]);
+    //     setMessageReceived(null);
+    // }, [feedReady]);
 
 
 
@@ -466,31 +496,33 @@ const UserProvider = (props) => {
         const user = gun.user();
         setGunUser(user);
 
-        const userContainer = getUserContainer(user); // Load currently loggin user
+        const loggedInUser = usersManager.getUserContainer(user); // Load currently loggin user
         // Load the profile on to dpeepUser
-        userContainer.loadProfile();
-        setUser(userContainer);
-        //initializeFeed(userContainer);
-        initializeRelationships(userContainer);
+        loggedInUser.loadProfile();
+        setUser(loggedInUser);
+
+        feedManager.loadUser(loggedInUser);
+
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [setIsLoggedIn, setGunUser, getUserContainer, setUser]); //, initializeFeed
+    }, [setIsLoggedIn, setGunUser, feedManager, setUser]); //, initializeFeed
 
 
-    const loadFeed = React.useCallback(() => {
-        let temp = feed || [];
+    // const loadFeed = React.useCallback(() => {
+    //     let temp = feed || [];
 
-        const items = Object.values(feedReady);
-        if (items.length > 0) {
-            setFeed([...items, ...temp]); // Simply copy ready feed, more advanced sorting on date etc. may be implemented.
-            resetFeedReady();
-            return true;
-        }
+    //     const items = Object.values(feedReady);
+    //     if (items.length > 0) {
+    //         setFeed([...items, ...temp]); // Simply copy ready feed, more advanced sorting on date etc. may be implemented.
+    //         resetFeedReady();
+    //         return true;
+    //     }
 
-        if (feed)  // No new messages but we have a feed already
-            return true;
+    //     if (feed)  // No new messages but we have a feed already
+    //         return true;
 
-        return false;
-    }, [feed, feedReady, setFeed, resetFeedReady]);
+    //     return false;
+    // }, [feed, feedReady, setFeed, resetFeedReady]);
 
     // UseEffects --------------------------------------------------------------------------------------------
 
@@ -504,6 +536,8 @@ const UserProvider = (props) => {
             (async () => {
                 onAuth();
             })();
+
+        
         }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -539,15 +573,15 @@ const UserProvider = (props) => {
 
     const value = React.useMemo(
         () => ({
-            user, gun, isLoggedIn, feed, feedIndex, feedReady, messageReceived, userSignUp, loginPassword,
-            logout, setFeed, getUserContainerById,
-            followUser, setMessageReceived, resetFeedReady, loadFeed,
+            user, gun, isLoggedIn, feedManager, messageReceived, userSignUp, loginPassword,
+            logout, usersManager,
+            setMessageReceived, 
             
         }),
         [
-            user, gun, isLoggedIn, feed, feedIndex, feedReady, messageReceived,
-            userSignUp, loginPassword, logout, setFeed, getUserContainerById,
-            followUser, setMessageReceived, resetFeedReady, loadFeed,
+            user, gun, isLoggedIn, feedManager, messageReceived,
+            userSignUp, loginPassword, logout, usersManager,
+             setMessageReceived, 
              
         ]
     );

@@ -20,7 +20,7 @@ const Wrapper = styled.div`
 
 
 const WhoToFollow = () => {
-	const { user: loggedInUser, gun, getUserContainerById} = useUser();
+	const { user: loggedInUser, gun, usersManager} = useUser();
 
 	const [ list, setList ] = useState(null);
 
@@ -32,7 +32,7 @@ const WhoToFollow = () => {
 			const availableUsers = await gun.get(resources.node.names.dpeep).get(resources.node.names.userIndex).once(p=>p, {wait:0}).then() || {};
 			
 			const allUsers = Object.keys(availableUsers).filter(key => key !== '_' && key !== loggedInUser.id && availableUsers[key]).map(key => {
-				const keyUser = getUserContainerById(key);
+				const keyUser = usersManager.getUserContainerById(key);
 
 				keyUser.isFollowing = false;
 				keyUser.isSelf = (key === loggedInUser.id);

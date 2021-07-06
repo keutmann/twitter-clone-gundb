@@ -24,7 +24,7 @@ const Wrapper = styled.div`
 `;
 
 const Profile = () => {
-  const { isLoggedIn, user, getUserContainerById } = useUser();
+  const { isLoggedIn, user, usersManager } = useUser();
   const { handle } = useParams(); 
   const [ viewedUser, setViewedUser] = useState(null);
   const [ profile, setProfile] = useState(null);
@@ -32,7 +32,7 @@ const Profile = () => {
 
   
   useEffect(() => {
-    const userContainer = getUserContainerById(handle);
+    const userContainer = usersManager.getUserContainerById(handle);
     if(!userContainer) {
       setUserNotFound(true);
       return;

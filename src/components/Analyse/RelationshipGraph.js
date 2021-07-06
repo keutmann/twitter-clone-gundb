@@ -90,7 +90,7 @@ const RelationshipGraph = ({ user, close }) => {
   const graphRef = React.createRef();
   const { theme } = useContext(ThemeContext);
   const history = useHistory();
-  const { getUserContainerById } = useUser();
+  const { usersManager } = useUser();
 
 
   function InitState() {
@@ -126,7 +126,7 @@ const RelationshipGraph = ({ user, close }) => {
         if (relationship.action === resources.node.names.neutral)
           continue;
 
-        let childUser = getUserContainerById(userId);
+        let childUser = usersManager.getUserContainerById(userId);
         load(childUser, currentNode, relationship, level - 1);
       }
     }

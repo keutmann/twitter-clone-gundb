@@ -21,22 +21,28 @@ const CommentsFeed = ({ user }) => {
 
     if(feed) 
       return; // The feed has been loaded, do not reload
+    let list = [];
 
     const comments = user.node.comments;
+    comments.map().on((data,k) => {
+      const item = new CommentContainer(data, getUserContainerById);
+      list.push(item);
+    });
 
-    (async () => {
-      let list = [];
-      for await (let [ref] of comments.iterate({ order: -1 })) {
-          let data = await ref.then();
-          if(!data) continue;
-          const item = new CommentContainer(data, getUserContainerById);
-          list.push(item);
-      }
-
-      setFeed(list);
-    })();
+    // setTimeout(()=> {
+  
+    // }, 1000)
+    // (async () => {
+    //   let list = [];
+    //   for await (let [ref] of comments.iterate({ order: -1 })) {
+    //       let data = await ref.then();
+    //       if(!data) continue;
+    //       const item = new CommentContainer(data, getUserContainerById);
+    //       list.push(item);
+    //   }
+    setTimeout(setFeed(list), 1000);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, []);
 
   if(!feed) return <Loader />; // Wait for the feed to be loaded
 

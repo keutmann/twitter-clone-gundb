@@ -117,7 +117,7 @@ const ScoreGraph = ({ user, close }) => {
   const { theme } = useContext(ThemeContext);
   const history = useHistory();
 
-  const { getUserContainerById, user: logginInUser } = useUser();
+  const { usersManager, user: logginInUser } = useUser();
   
 
   function InitState() {
@@ -165,7 +165,7 @@ const ScoreGraph = ({ user, close }) => {
               continue;
           }
 
-          let parentUser = getUserContainerById(userId);
+          let parentUser = usersManager.getUserContainerById(userId);
           load(parentUser, currentNode, relationship, level - 1);
         }
 

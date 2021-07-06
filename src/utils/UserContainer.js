@@ -1,4 +1,4 @@
-import { DateTree } from "gun-util";
+//import { DateTree } from "gun-util";
 import { DispatcherEvent } from "./DispatcherEvent";
 import resources from "./resources";
 
@@ -13,32 +13,37 @@ export class UserContainer {
         const dpeep = gunUser.get(resources.node.names.dpeep);
         const profile = dpeep.get(resources.node.names.profile);
         // The DateTree root has to be clean of other properties not related to DateTree. Or iteration will fail etc.
-        const tweets = new DateTree(dpeep.get(resources.node.names.tweets), 'millisecond');
-        const tweetsMetadata = dpeep.get(resources.node.names.tweetsMetadata);
+        //const tweets = new DateTree(dpeep.get(resources.node.names.tweets), 'millisecond');
+        const tweets = dpeep.get(resources.node.names.tweets);
+        //tweets.put({});
+        const tweetsIndex = dpeep.get(resources.node.names.tweetsIndex);
 
-        const comments = new DateTree(dpeep.get(resources.node.names.comments), 'millisecond');
-        const commentsMetadata = dpeep.get(resources.node.names.commentsMetadata);
+        //const comments = new DateTree(dpeep.get(resources.node.names.comments), 'millisecond');
+        const comments = dpeep.get(resources.node.names.comments);
+        const commentsIndex = dpeep.get(resources.node.names.commentsMetadata);
 
         const relationships = dpeep.get(resources.node.names.relationships);
-        const relationshipsMetadata = dpeep.get(resources.node.names.relationshipsMetadata);
+        const relationshipsIndex = dpeep.get(resources.node.names.relationshipsIndex);
 
-        const claims = new DateTree(dpeep.get(resources.node.names.claims), 'month'); // Combine all claims into one month batch, estimated best performance (It's a guess). 
-        const claimsMetadata = dpeep.get(resources.node.names.claimsMetadata);
+        //const claims = new DateTree(dpeep.get(resources.node.names.claims), 'month'); // Combine all claims into one month batch, estimated best performance (It's a guess). 
+        const claims = dpeep.get(resources.node.names.claims);
+        const claimsIndex = dpeep.get(resources.node.names.claimsIndex);
 
         this.node = {
             user: gunUser,
             tweets,
-            tweetsMetadata,
+            tweetsIndex: tweetsIndex,
             comments,
-            commentsMetadata,
+            commentsIndex: commentsIndex,
             profile,
             dpeep,
             relationships,
-            relationshipsMetadata,
+            relationshipsIndex: relationshipsIndex,
             claims,
-            claimsMetadata
+            claimsIndex: claimsIndex
         };
 
+        this.claims = {}; // Referece to loaded claims from gun.
         this.relationshipBy = [];
         this.relationships = {};
         this.relationshipChanged = 0;
@@ -193,9 +198,9 @@ export class UserContainer {
         }
 
         if (cb && !this.profile.loaded) {
-            this.profile.loaded = true;
             this.node.profile.once((val) => {
                 this.profile = Object.assign({}, this.profile, val); // Create a new object, that will trigger rerender on React
+                this.profile.loaded = true;
                 cb(this.profile);
             });
         }
@@ -207,5 +212,35 @@ export class UserContainer {
         //this.node.relationships.get(targetUser.nodeId).get('action').put(action.name);
         this.node.relationships.get('~'+targetUser.id).put(action);
     }
+
+    loadProfile2(cb) {
+
+        let profile = this._profile;
+
+        return profile;
+
+    }
+
+
+    // get profile2() {
+    //     if (!this._profile) {
+    //         const preProfile = UserContainer.getDefaultProfile(this.id, null);
+    //         this._profile = Object.assign({}, resources.node.profile, preProfile);
+    //     }
+
+    //     if (this._profile.loaded < 1) { // No gun call have been made yet.
+    //         this.node.profile.once((val) => {
+    //             this._profile = Object.assign({}, this._profile, val); // Create a new object, that will trigger rerender on React
+    //             this._profile.loaded = 2;
+    //         });
+    //     }
+        
+    //     return this._profile;
+    // }
+    
+    // set profile2(profile) {
+    //     this._profile = profile;
+    // }
+
 
 }

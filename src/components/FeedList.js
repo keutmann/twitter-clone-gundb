@@ -1,4 +1,4 @@
-import React, { useEffect} from "react";
+import React, { useEffect, useState} from "react";
 import styled from "styled-components";
 import Loader from "./Loader";
 import Tweet from "./Tweet/Tweet";
@@ -12,7 +12,9 @@ const Wrapper = styled.div`
 
 const FeedList = () => {
 
-  const { feed, feedReady, setFeed, resetFeedReady } = useUser(); 
+  const { feedManager } = useUser(); 
+
+  const [feed, setFeed] = useState();
 
   // Events
   // Page load, effect run
@@ -26,45 +28,35 @@ const FeedList = () => {
   // Start the effect on page load
   // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
+    const callback = (data) => (data.length > 0) ? setFeed(data): true;
+    feedManager.onFeedUdated.registerCallback(callback);
 
-    const loadFeed = () => {
-      let temp = feed || [];
+    if(feedManager.feed.length > 0) { // we have data
+      feedManager.update(); // Ensure to get the latest tweets 
+    } else {
+      // We have an null feed and no messages, wait 5 seconds for messages.
+      let count = 5;
+      let timerId = setInterval(() => {
+        console.log("LoadFeed interval " + count);
+        
+        if(feedManager.stagingNewCount > 0) {
+          feedManager.update();
+          clearInterval(timerId);
+          return;
+        }
 
-      const items = Object.values(feedReady);
-      if(items.length > 0) {
-        setFeed([...items, ...temp]); // Simply copy ready feed, more advanced sorting on date etc. may be implemented.
-        resetFeedReady();
-        console.log("FeedList setFeed");
-        return true;
-      }
+        count--;
+        if(count === 0) { // Feed is null, and no messages found, make empty feed.
+          setFeed([]);
+          clearInterval(timerId);
+          return;
+        }
 
-      if(feed)  // No new messages but we have a feed already
-        return true;
-
-      return false;
+      }, 1000);
     }
-
-    if(loadFeed()) // Check now for messages
-      return;
-
-    // We have an null feed and no messages, wait 5 seconds for messages.
-    let count = 5;
-    let timerId = setInterval(() => {
-      console.log("LoadFeed interval " + count);
-      
-      if(loadFeed()) { // Load new messages
-        clearInterval(timerId);
-        return;
-      }
-
-      count--;
-      if(count === 0) { // Feed is null, and no messages found, make empty feed.
-        setFeed([]);
-        clearInterval(timerId);
-        return;
-      }
-
-    }, 1000);
+    return () => {
+      feedManager.onFeedUdated.unregisterCallback(callback);
+    };
 
 
   // eslint-disable-next-line react-hooks/exhaustive-deps

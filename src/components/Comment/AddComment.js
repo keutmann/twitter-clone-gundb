@@ -11,7 +11,6 @@ import AvatarIdenticon from "../AvatarIdenticon";
 import Loader from "../Loader";
 import useUser from "../../hooks/useUser";
 import resources from '../../utils/resources';
-import { DateTree } from 'gun-util';
 
 
 const Wrapper = styled.div`
@@ -69,12 +68,13 @@ const AddComment = ({ tweetNode }) => {
         createdAt: commentId
       }
       
-      const commentNode = user.node.comments.get(date); 
+      const commentNode = user.node.comments.get(commentId);
       const commentData = await commentNode.put(data).then(); // Add Comment to DateTree and wait for the Gun data object.
       commentNode.get(resources.node.names.tweet).put(tweetNode); // Add a reference to the Tweet object
 
-      const tweetCommentsTree = new DateTree(tweetNode.get(resources.node.names.comments), 'millisecond');
-      tweetCommentsTree.get(date).get(user.id).put(commentData);
+      tweetNode.get(resources.node.names.comments).get(commentId+user.id).put(commentData);
+      // const tweetCommentsTree = new DateTree(tweetNode.get(resources.node.names.comments), 'millisecond');
+      // tweetCommentsTree.get(date).get(user.id).put(commentData);
 
       toast.success("Your reply has been added");
     } catch (err) {
