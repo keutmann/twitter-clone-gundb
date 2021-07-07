@@ -1,3 +1,4 @@
+import 'gun/gun';
 import sea from 'gun/sea';
 
 export const sha256 = async (data) => await sea.work(data, undefined, undefined, { name: 'SHA-256' });

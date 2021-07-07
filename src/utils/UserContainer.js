@@ -221,6 +221,14 @@ export class UserContainer {
 
     }
 
+    isFollow() {
+        return (this.state && 
+            (this.state.action === resources.node.names.trust || this.state.action === resources.node.names.follow));
+    }
+
+    isTrust() {
+        return this.state && this.state.action === resources.node.names.trust;
+    }
 
     // get profile2() {
     //     if (!this._profile) {

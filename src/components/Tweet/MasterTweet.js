@@ -7,10 +7,9 @@ import Tweet from "./Tweet";
 import Comment from "../Comment/Comment";
 import AddComment from "../Comment/AddComment";
 import useUser  from '../../hooks/useUser';
-import resources from "../../utils/resources";
-import { DateTree } from 'gun-util';
+//import resources from "../../utils/resources";
 import { TweetContainer } from "../../utils/TweetContainer";
-import { CommentContainer } from "../../utils/CommentContainer";
+//import { CommentContainer } from "../../utils/CommentContainer";
 
 
 const Wrapper = styled.div`
@@ -51,22 +50,22 @@ const MasterTweet = () => {
       setTweet(tweet);
 
       // The comments of the Tweet node, is from the public Gun space without user write restrictions.
-      const commentsTree = new DateTree(node.get(resources.node.names.comments), 'millisecond');
+      // const commentsTree = new DateTree(node.get(resources.node.names.comments), 'millisecond');
 
       let list = [];
-      for await (let [ref] of commentsTree.iterate({ order: 1 })) {
-          let data = await ref.then();
-          if(!data) continue;
+      // for await (let [ref] of commentsTree.iterate({ order: 1 })) {
+      //     let data = await ref.then();
+      //     if(!data) continue;
 
-          const keys = Object.keys(data).filter( p=> p !== '_')
-          for(let key of keys) {
-            const item = await ref.get(key).then();
-            //const item = data[key];
-            const container = new CommentContainer(item);
-            container.setOwner(usersManager.getUserContainerById(container.userId));
-            list.push(container);
-          };
-      }
+      //     const keys = Object.keys(data).filter( p=> p !== '_')
+      //     for(let key of keys) {
+      //       const item = await ref.get(key).then();
+      //       //const item = data[key];
+      //       const container = new CommentContainer(item);
+      //       container.setOwner(usersManager.getUserContainerById(container.userId));
+      //       list.push(container);
+      //     };
+      // }
 
       setComments(list);
     })();

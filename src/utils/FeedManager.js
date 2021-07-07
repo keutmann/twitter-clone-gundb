@@ -15,13 +15,8 @@ export class FeedManager {
     }
 
     reset() {
-        this.end = moment();
-        this.start = moment();
-
-        // 2021-07-05T15:12:21Z
-        // Find all before 2 month of now.
-        this.followSearch = {'.': {'>': this.start.add(-2, "month").format("YYYY-MM") }}
-
+        this.end = undefined;
+        this.start = undefined;
 
         this.feed = [];
         this.index = {}
@@ -36,15 +31,25 @@ export class FeedManager {
 
         this.loggedInUser = null;
         this.maxDegree = 2;
+        this.initialLoading = true; // The feed is still loading the initial messages.
 
+    }
+
+    getDate(dateString) {
+        return moment.utc(dateString);
     }
 
     update() {
         let feedNew = TweetContainer.sort(this.stagingNew);
         let feedOld = TweetContainer.sort(this.stagingOld);
         this.feed = [...feedNew, ...this.feed, ...feedOld];
-        // this.start = feedNew[0].date;
-        // this.end = feedOld[0].date;
+        if(this.feed.length > 0) {
+            this.start = this.getDate(this.feed[0].id);
+            this.end = this.getDate(this.feed[this.feed.length-1].id);
+        } else {
+            this.start = undefined;
+            this.end = undefined;
+        }
         this.stagingNew = {};
         this.stagingNewCount = 0;
         this.stagingOld = {};
@@ -57,7 +62,7 @@ export class FeedManager {
         let feedOld = TweetContainer.sort(this.stagingOld);
         if (this.stagingOldCount > 0) {
             this.feed = [...this.feed, ...feedOld];
-            //this.end = feedOld[0].date;
+            this.end = (this.feed.length > 0) ? this.getDate(this.feed[this.feed.length-1].id) : undefined;
             this.stagingOld = {};
             this.stagingOldCount = 0;
 
@@ -66,10 +71,51 @@ export class FeedManager {
         this.loadNextBatch();
     }
 
+    // When the feed has not been loaded yet.
+    initialFeedLex() {
+        const start = this.start || moment();
+        const end =  this.end || moment(start);
+        end.add(-1, 'month'); // For now, use 1 month, as the amount of feed available in the system is limited.
+        //, , '>': end.toISOString() 
+        let lex = {'.': { '>': end.toISOString() }, '%': 50000, '-': 1}; // The 50k limit has to be defined otherwise the lex do not work properly! The minus 1 makes the ordering correct.
+        return lex;
+    }
+
+    // When looking for old messages after the feed has been loaded.
+    rollFeedLex() {
+
+        const start = this.end || moment();
+
+        //TODO: Do not work!
+        const lex = {'.': {'<': start.toISOString() }, '%': 50000, '-': 1}; // Just load 50k, and see where we end.
+        return lex;
+    }
+
+    // Only get new messages from start date. 
+    // When the feed has been loaded and new users are followed.
+    // Basically this lex ensures that only new events are called.
+    subscribeFeedLex() {
+        const start = this.start || moment();
+
+        let lex = {'.': {'>': start.toISOString() }, '%': 50000, '-': 1}; // The 50k limit has to be defined otherwise the lex do not work properly! The minus 1 makes the ordering correct.
+        return lex;
+    }
+
     // Loads old tweets from end date
     loadNextBatch() {
-
+        for(var key of Object.keys(this.loggedInUser.relationships))
+        {
+            let localUser = this.users.getUserContainerById(key);
+            if(localUser && localUser.isFollow()) {
+                const search = this.rollFeedLex();
+                
+                localUser.node.tweets.get(search).once().map().once((data, key) => {
+                    this.addFeedOld(data,key, localUser);
+                }); // Load the latest tweet from the user.
+            }
+        }
     }
+
 
 
     // eslint-disable-next-line no-unused-vars
@@ -116,16 +162,54 @@ export class FeedManager {
         return true;
     }
 
-    // Get a slim user object and not the full container 
-    getItem(key) {
-        return this.index[key] || (this.index[key] = { claimedBy: {} });
+
+    addFeedOld(data, key, owner) {
+        if (!data) // Data is null, we need to remove it from feed!? But what id?
+            return;
+
+        const item = new TweetContainer(data);
+        item.setOwner(owner);
+
+        if (Policy.addTweet(item, this.loggedInUser, null)) // Check with the policy before adding to feed.
+        {
+            if (this.index[item.soul])
+                return true;
+
+            this.index[item.soul] = item; // Use index, so the data only gets added to the feed once.
+            this.stagingOld[item.soul] = item;
+            this.stagingOldCountCount ++;
+            this.onOldTweetAdded.fire(item);
+        }
+        else {
+            // The policy is to exclude the tweet, therefore remove it if already exist.
+            this.removeFromFeed(item.soul, null);
+        }
+
+        //setMessageReceived(item.soul);
+        return true;
     }
 
-    addClaim(claim, key, user, localDegree) {
-        const item = this.getItem(key);
-        claim.localDegree = localDegree;
-        item.claimedBy[user.id] = claim;
-        user.claims[key] = claim;
+    
+    getItem(soul) {
+        return this.index[soul] || (this.index[soul] = { claimBy: {} });
+    }
+
+    addClaim(owner, gunClaim, soul, _msg, _ev) {
+        const item = this.getItem(soul);
+        item._ev = _ev; // Reference to Event enabling unsubscribtion.
+
+        // Copy claim as the gunClaim changes by gun on change.
+        const claim = Object.assign({}, gunClaim);
+        if(!claim.degree) // Store the current degree, as when the owner changes the degree, its detectable
+            claim.degree = owner.degree; 
+
+        claim.owner = owner; 
+        const oldClaim = owner.claims[soul];
+
+        item.addClaim(claim, oldClaim);
+
+        owner.claims[soul] = claim;
+
     }
 
     // TODO: The cascading effect of Trust and Untrust, needs to be done.
@@ -168,7 +252,7 @@ export class FeedManager {
 
     //     for await (let [month] of claimTree.iterate(search)) {
     //         month.map().on((claim, key) => {
-    //             this.addClaim(claim, key, targetUser, targetUser.degree);
+    //             this.addClaim(targetUser, claim, key);
     //         });
     //     }
     // }
@@ -219,9 +303,11 @@ export class FeedManager {
 
     followUser(targetUser) {
 
-        let search = {'.': {'>': '2021-07-06T08:10:40.786Z'}, '%': 50000, '-': 1};
-
-        targetUser.node.tweets.get(search).map().once((data, key, _msg, _ev) => {
+        // let search = {'.': {'>': '2021-07-06T08:10:40.786Z'}, '%': 50000, '-': 1};
+        // console.log(search);
+        const search2 = (this.initialLoading) ? this.initialFeedLex() : this.subscribeFeedLex();
+        //console.log(search2);
+        targetUser.node.tweets.get(search2).map().once((data, key, _msg, _ev) => {
             this.addFeed(data,key, _msg, _ev);
         }); // Load the latest tweet from the user.
     }
@@ -233,7 +319,9 @@ export class FeedManager {
     trustUser(targetUser) {
         this.followUser(targetUser);
 
-        targetUser.node.claims.map(this.followSearch).on((v, k) => this.addClaim(v, k, targetUser, targetUser.degree)); // Load the latest tweet from the user.
+        //TODO: Need a lex search for the claims, for now, load all in one go.
+        //Using the "on" event, as claims can change offen.
+        targetUser.node.claims.map().on((v, k, m, e) => this.addClaim(targetUser, v, k, m, e)); // Load the latest tweet from the user.
 
         this.load(targetUser);
     }
@@ -241,7 +329,7 @@ export class FeedManager {
     untrustUser(targetUser) {
         this.unfollowUser(targetUser);
 
-        targetUser.node.claims.map(this.followSearch).off();
+        targetUser.node.claims.map().off();
         targetUser.processed = false;
         this.unloadClaims(targetUser);
     }
