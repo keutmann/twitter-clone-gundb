@@ -307,17 +307,17 @@ export class FeedManager {
 
     followUser(targetUser) {
 
-        targetUser.node.tweets.map().once((data, key, _msg, _ev) => {
-            console.log(data);
-        }); // Load the latest tweet from the user.
+        // targetUser.node.tweets.map().once((data, key, _msg, _ev) => {
+        //     console.log(data);
+        // }); // Load the latest tweet from the user.
 
         // let search = {'.': {'>': '2021-07-06T08:10:40.786Z'}, '%': 50000, '-': 1};
         // console.log(search);
         const search2 = (this.initialLoading) ? this.initialFeedLex() : this.subscribeFeedLex();
 
-        targetUser.node.tweets.get(search2).map().once((data, key, _msg, _ev) => {
-            console.log(data);
-        }); // Load the latest tweet from the user.
+        // targetUser.node.tweets.get(search2).map().once((data, key, _msg, _ev) => {
+        //     console.log(data);
+        // }); // Load the latest tweet from the user.
 
         //console.log(search2);
         targetUser.node.tweets.get(search2).map().once((data, key, _msg, _ev) => {

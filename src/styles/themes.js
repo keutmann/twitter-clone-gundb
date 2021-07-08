@@ -19,6 +19,10 @@ export const lightTheme = {
   muteTextcolor: "black",
   blockBackground: "red",
   blockTextcolor: "white",
+  confirmTextcolor: "black",
+  confirmBackground: "green",
+  rejectTextcolor: "black",
+  rejectBackground: "red",
 };
 
 export const darkTheme = {
@@ -42,5 +46,8 @@ export const darkTheme = {
   muteTextcolor: "black",
   blockBackground: "red",
   blockTextcolor: "white",
-
+  confirmTextcolor: "black",
+  confirmBackground: "green",
+  rejectTextcolor: "black",
+  rejectBackground: "red",
 };

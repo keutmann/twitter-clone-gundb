@@ -44,8 +44,8 @@ const MasterTweet = () => {
       
       const data = await node.then(); 
 
-      const tweet = new TweetContainer(data);
-      tweet.setOwner(usersManager.getUserContainerById(tweet.userId));
+      const tweet = new TweetContainer(data, soul);
+      tweet.setOwner(userContainer);
       
       setTweet(tweet);
 

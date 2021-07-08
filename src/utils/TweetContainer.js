@@ -1,7 +1,3 @@
-// import { DateTree } from "gun-util";
-// import { DispatcherEvent } from "./DispatcherEvent";
-// import resources from "./resources";
-import Gun from 'gun/gun';
 import { DispatcherEvent } from './DispatcherEvent';
 import resources from './resources';
 import { UserContainer } from './UserContainer';
@@ -130,6 +126,12 @@ export class TweetContainer {
             return arr;
         }
         return this.claimBy.reduce(find, []);
+    }
+
+    getScoreClaims() {
+        let index = 0;
+        while (!this.claimBy[index] && index < this.claimBy.length) index++;
+        return [this.claimBy[index], index];
     }
 
     calculateScore(event) {
