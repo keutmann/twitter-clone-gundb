@@ -3,6 +3,7 @@ import { DispatcherEvent } from "./DispatcherEvent";
 import { Policy } from "./Policy";
 import resources from "./resources";
 import { TweetContainer } from "./TweetContainer";
+import Gun from 'gun/gun';
 //import { UsersManager } from "./UsersManager";
 
 
@@ -130,25 +131,36 @@ export class FeedManager {
         delete this.stagingNew[soul];
         delete this.stagingOld[soul];
         
-        //setMessageReceived(soul);
-
         return true;
+    }
+
+    getTweetContainerBySoul(soul) {
+        return this.index[soul] ||  (this.index[soul] = new TweetContainer(null, soul));
+    }
+
+    getTweetContainerByData(data) {
+        const soul = Gun.node.soul(data);
+
+        const item = this.getTweetContainerBySoul(soul);
+        item.data = data;
+        if(!item.owner)
+            item.setOwner(this.users.getUserContainerById(item.userId));
+
+        return item;
     }
 
 
     addFeed(data, key, _msg, _ev) {
         if (!data) // Data is null, we need to remove it from feed!? But what id?
-            return;
+            return false;
 
-        const item = new TweetContainer(data);
-        item.setOwner(this.users.getUserContainerById(item.userId));
+        const item = this.getTweetContainerByData(data);
 
         if (Policy.addTweet(item, this.loggedInUser, null)) // Check with the policy before adding to feed.
         {
-            if (this.index[item.soul])
+            if(this.stagingNew[item.soul]) // Item has already been added
                 return true;
 
-            this.index[item.soul] = item; // Use index, so the data only gets added to the feed once.
             this.stagingNew[item.soul] = item;
             this.stagingNewCount ++;
             this.onNewTweetAdded.fire(item);
@@ -158,7 +170,6 @@ export class FeedManager {
             this.removeFromFeed(item.soul, null);
         }
 
-        //setMessageReceived(item.soul);
         return true;
     }
 
@@ -167,15 +178,13 @@ export class FeedManager {
         if (!data) // Data is null, we need to remove it from feed!? But what id?
             return;
 
-        const item = new TweetContainer(data);
-        item.setOwner(owner);
+        const item = this.getTweetContainerByData(data);
 
         if (Policy.addTweet(item, this.loggedInUser, null)) // Check with the policy before adding to feed.
         {
-            if (this.index[item.soul])
+            if(this.stagingOld[item.soul]) // Item has already been added
                 return true;
 
-            this.index[item.soul] = item; // Use index, so the data only gets added to the feed once.
             this.stagingOld[item.soul] = item;
             this.stagingOldCountCount ++;
             this.onOldTweetAdded.fire(item);
@@ -185,17 +194,12 @@ export class FeedManager {
             this.removeFromFeed(item.soul, null);
         }
 
-        //setMessageReceived(item.soul);
         return true;
     }
 
     
-    getItem(soul) {
-        return this.index[soul] || (this.index[soul] = { claimBy: {} });
-    }
-
     addClaim(owner, gunClaim, soul, _msg, _ev) {
-        const item = this.getItem(soul);
+        const item = this.getTweetContainerBySoul(soul);
         item._ev = _ev; // Reference to Event enabling unsubscribtion.
 
         // Copy claim as the gunClaim changes by gun on change.
@@ -217,7 +221,7 @@ export class FeedManager {
 
         // Remove the trust from TargetUser on all items.
         for (const [key,] of Object.entries(this.loggedInUser.claims)) {
-            let item = this.getItem(key);
+            let item = this.getTweetContainerBySoul(key);
             delete item.claimedBy[targetUser.id];
             item.claimsChanged = true;
         }; // Remove all claims
@@ -303,9 +307,18 @@ export class FeedManager {
 
     followUser(targetUser) {
 
+        targetUser.node.tweets.map().once((data, key, _msg, _ev) => {
+            console.log(data);
+        }); // Load the latest tweet from the user.
+
         // let search = {'.': {'>': '2021-07-06T08:10:40.786Z'}, '%': 50000, '-': 1};
         // console.log(search);
         const search2 = (this.initialLoading) ? this.initialFeedLex() : this.subscribeFeedLex();
+
+        targetUser.node.tweets.get(search2).map().once((data, key, _msg, _ev) => {
+            console.log(data);
+        }); // Load the latest tweet from the user.
+
         //console.log(search2);
         targetUser.node.tweets.get(search2).map().once((data, key, _msg, _ev) => {
             this.addFeed(data,key, _msg, _ev);

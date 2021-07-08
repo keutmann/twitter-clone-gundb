@@ -37,7 +37,6 @@ const UserProvider = (props) => {
 
     // The feed is global, so its available for build up in the background
     const [feedManager] = useState(new FeedManager(usersManager));
-    const [messageReceived, setMessageReceived] = useState(null);
 
 
     // Verify that a user is not banned from adding data into local database.
@@ -201,16 +200,12 @@ const UserProvider = (props) => {
 
     const value = React.useMemo(
         () => ({
-            user, gun, isLoggedIn, feedManager, messageReceived, userSignUp, loginPassword,
+            user, gun, isLoggedIn, feedManager,  userSignUp, loginPassword,
             logout, usersManager,
-            setMessageReceived, 
-            
         }),
         [
-            user, gun, isLoggedIn, feedManager, messageReceived,
+            user, gun, isLoggedIn, feedManager, 
             userSignUp, loginPassword, logout, usersManager,
-             setMessageReceived, 
-             
         ]
     );
 

@@ -11,8 +11,8 @@ export class TweetContainer {
     static sortCompare = (a, b) => a.sortCompare(b);
     static sort = (obj) => Object.entries(obj).map(([key,val], i) => val).sort(TweetContainer.sortCompare);
 
-    constructor(data) {
-        this.soul = Gun.node.soul(data);
+    constructor(data, soul) {
+        this.soul = soul;
         const soulElem = this.soul.split('/');
         this.userId = soulElem.shift(); // Get user ID, should be the same as Owner
         soulElem.shift(); // Just shift dpeep
@@ -24,6 +24,7 @@ export class TweetContainer {
         this.id = soulElem.shift(); 
 
         this.data = data;
+        this.loaded = !(!data);
         //this.confirmedBy = {};
         this.claimBy = [];
 
