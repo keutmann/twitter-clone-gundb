@@ -43,9 +43,9 @@ export class UserContainer {
             claimsIndex: claimsIndex
         };
 
-        this.claims = {}; // Referece to loaded claims from gun.
+        this.claims = new Map(); // Referece to loaded claims from gun.
         this.relationshipBy = [];
-        this.relationships = {};
+        this.relationships = new Map();
         this.relationshipChanged = 0;
         this.scores = [];
         this.score = null;

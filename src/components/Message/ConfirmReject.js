@@ -33,9 +33,8 @@ const ConfirmReject = ({ id, item }) => {
   const [event, setEvent] = useState({ item });
 
   function setClaim(action) {
-    //setAction(action);
     const date = new Date();
-    const key = date.toISOString()+"#"+item.soul; // date for sorting purpose, enabling search on new entries
+    const key = date.toISOString()+'!'+item.soul; // date for sorting purpose, enabling search on new entries. soul starts with user id ~
 
     logginInUser.node.claims.get(key).get("action").put(action);
   }
@@ -43,10 +42,10 @@ const ConfirmReject = ({ id, item }) => {
 
   useEffect(() => {
   
-      item.onStateChange.registerCallback(setEvent);
+      item.onStateChange.add(setEvent);
   
       return () => {
-        item.onStateChange.unregisterCallback(setEvent);
+        item.onStateChange.remove(setEvent);
       };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);

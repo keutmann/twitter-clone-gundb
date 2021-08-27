@@ -5,18 +5,18 @@ export default class MessageManager {
     // constructor() {
     // }
 
-    createId(message) {
-        const hash = this.getHash(message);
+    static async createId(message) {
+        const hash = await MessageManager.getHash(message);
         const date = new Date();
         const id = date.toISOString()+"#"+hash;
         return id;
     }
 
-    createMessage(text) {
+    static createMessage(text) {
         return { text };
     }
 
-    async getHash(message) {
+    static async getHash(message) {
         return await sha256_Of_Object(message);
     }
 

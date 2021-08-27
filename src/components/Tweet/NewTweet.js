@@ -57,8 +57,6 @@ const Wrapper = styled.div`
 
 const NewTweet = () => {
 
-  const messageManager = new MessageManager();
-
   const [tweetFiles, setTweetFiles] = useState([]);
   const tweet = useInput("");
 
@@ -69,7 +67,7 @@ const NewTweet = () => {
   const createMessage = async (message) => {
     // Timestamp the tweet automatically, this will enable time search on the users Tweets node.
 
-    const messageId = messageManager.createId(message);
+    const messageId = await MessageManager.createId(message);
     const messageNode = user.node.tweets.get(messageId); 
 
     //await tweetNode.put(tweet).then(); // Add Tweet to DateTree and wait for the Gun data object.
@@ -92,7 +90,7 @@ const NewTweet = () => {
 
     try {
        
-      let tweetdata = messageManager.createMessage(tweet.value);
+      let tweetdata = MessageManager.createMessage(tweet.value);
       
       await createMessage(tweetdata);
 

@@ -235,7 +235,7 @@ export class FeedManager {
     addClaim(owner, gunClaim, key, _msg, _ev) { 
         owner.claimsEvent = _ev; // Reference to Event enabling unsubscribtion.
 
-        let [, soul] = key.splitKey("#"); // key = isodate#soul
+        let [, soul] = key.split("!"); // key = isodate~soul#hash
         if(!soul) return;
 
         let item = this.feedIndex.get(soul); 
