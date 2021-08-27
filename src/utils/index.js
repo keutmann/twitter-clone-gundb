@@ -53,7 +53,7 @@ export const instantiateNewGun = (Gun, opts) => () => {
 
 
 
-// export const createTweetContainer = (tweet, userContainer) => {
+// export const createMessageContainer = (tweet, userContainer) => {
 //   const soul = Gun.node.soul(tweet);
 //   const id = soul.split('/').pop();
 //   const date = moment(tweet.createdAt);

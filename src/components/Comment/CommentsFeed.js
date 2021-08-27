@@ -4,7 +4,7 @@ import Loader from "../Loader";
 import Comment from "./Comment";
 import CustomResponse from "../CustomResponse";
 import useUser from "../../hooks/useUser";
-import { CommentContainer } from "../../utils/CommentContainer";
+import { CommentContainer } from "../../lib/CommentContainer";
 
 
 const Wrapper = styled.div`

@@ -5,7 +5,7 @@ import Tweet from "../Tweet/Tweet";
 import CustomResponse from "../CustomResponse";
 //import useUser from "../../hooks/useUser";
 // import { Policy } from "../../utils/Policy";
-// import { TweetContainer } from "../../utils/TweetContainer";
+// import { MessageContainer } from "../../lib/MessageContainer";
 
 
 const Wrapper = styled.div`
@@ -35,7 +35,7 @@ const ProfileFeed = ({ user }) => {
   //         let tweet = await node.then();
 
   //         if(!tweet) continue;
-  //         const item = new TweetContainer(tweet);
+  //         const item = new MessageContainer(tweet);
   //          item.setOwner(usersManager.getUserContainerById(item.userId));
   //         item.node = node;
 

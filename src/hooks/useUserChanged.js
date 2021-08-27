@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import "../utils/DispatcherEvent";
+import "../lib/DispatcherEvent";
 
 
 const useUserChanged = (user) => {

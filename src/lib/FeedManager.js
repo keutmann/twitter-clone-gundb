@@ -1,8 +1,8 @@
 import moment from "moment";
-import { DispatcherEvent } from "./DispatcherEvent";
-import { Policy } from "./Policy";
-import resources from "./resources";
-import { TweetContainer } from "./TweetContainer";
+import { DispatcherEvent } from "../lib/DispatcherEvent";
+import { Policy } from "../utils/Policy";
+import resources from "../utils/resources";
+import { MessageContainer } from "../lib/MessageContainer";
 import Gun from 'gun/gun';
 //import { UsersManager } from "./UsersManager";
 
@@ -41,8 +41,8 @@ export class FeedManager {
     }
 
     update() {
-        let feedNew = TweetContainer.sort(this.stagingNew);
-        let feedOld = TweetContainer.sort(this.stagingOld);
+        let feedNew = MessageContainer.sort(this.stagingNew);
+        let feedOld = MessageContainer.sort(this.stagingOld);
         this.feed = [...feedNew, ...this.feed, ...feedOld];
         if(this.feed.length > 0) {
             this.start = this.getDate(this.feed[0].id);
@@ -60,7 +60,7 @@ export class FeedManager {
     }
 
     rollNext() {
-        let feedOld = TweetContainer.sort(this.stagingOld);
+        let feedOld = MessageContainer.sort(this.stagingOld);
         if (this.stagingOldCount > 0) {
             this.feed = [...this.feed, ...feedOld];
             this.end = (this.feed.length > 0) ? this.getDate(this.feed[this.feed.length-1].id) : undefined;
@@ -145,14 +145,14 @@ export class FeedManager {
         return true;
     }
 
-    getTweetContainerBySoul(soul) {
-        return this.index[soul] ||  (this.index[soul] = new TweetContainer(null, soul));
+    getMessageContainerBySoul(soul) {
+        return this.index[soul] ||  (this.index[soul] = new MessageContainer(null, soul));
     }
 
-    getTweetContainerByData(data) {
+    getMessageContainerByData(data) {
         const soul = Gun.node.soul(data);
 
-        const item = this.getTweetContainerBySoul(soul);
+        const item = this.getMessageContainerBySoul(soul);
         item.data = data;
         if(!item.owner)
             item.setOwner(this.users.getUserContainerById(item.userId));
@@ -165,7 +165,7 @@ export class FeedManager {
         if (!data) // Data is null, we need to remove it from feed!? But what id?
             return false;
 
-        const item = this.getTweetContainerByData(data);
+        const item = this.getMessageContainerByData(data);
 
         if (Policy.addTweet(item, this.loggedInUser, null)) // Check with the policy before adding to feed.
         {
@@ -189,7 +189,7 @@ export class FeedManager {
         if (!data) // Data is null, we need to remove it from feed!? But what id?
             return;
 
-        const item = this.getTweetContainerByData(data);
+        const item = this.getMessageContainerByData(data);
 
         if (Policy.addTweet(item, this.loggedInUser, null)) // Check with the policy before adding to feed.
         {
@@ -210,7 +210,7 @@ export class FeedManager {
 
     
     addClaim(owner, gunClaim, soul, _msg, _ev) {
-        const item = this.getTweetContainerBySoul(soul);
+        const item = this.getMessageContainerBySoul(soul);
         item._ev = _ev; // Reference to Event enabling unsubscribtion.
 
         // Copy claim as the gunClaim changes by gun on change.
@@ -232,7 +232,7 @@ export class FeedManager {
 
         // Remove the trust from TargetUser on all items.
         for (const [key,] of Object.entries(this.loggedInUser.claims)) {
-            let item = this.getTweetContainerBySoul(key);
+            let item = this.getMessageContainerBySoul(key);
             delete item.claimedBy[targetUser.id];
             item.claimsChanged = true;
         }; // Remove all claims
@@ -351,6 +351,7 @@ export class FeedManager {
 
         this.load(targetUser);
     }
+
 
     untrustUser(targetUser) {
         this.unfollowUser(targetUser);

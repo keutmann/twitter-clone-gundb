@@ -4,10 +4,10 @@ import resources from '../utils/resources';
 import { sha256 } from '../utils/crypto';
 // import { UserContainer } from '../utils/UserContainer';
 // import { Policy } from '../utils/Policy';
-// import { TweetContainer } from '../utils/TweetContainer';
+// import { MessageContainer } from '../lib/MessageContainer';
 // import moment from 'moment';
-import { UsersManager } from '../utils/UsersManager';
-import { FeedManager } from '../utils/FeedManager';
+import { UsersManager } from '../lib/UsersManager';
+import { FeedManager } from '../lib/FeedManager';
 import useGun from '../hooks/useGun';
 import sea from 'gun/sea';
 

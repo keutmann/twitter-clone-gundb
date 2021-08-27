@@ -8,8 +8,8 @@ import Comment from "../Comment/Comment";
 import AddComment from "../Comment/AddComment";
 import useUser  from '../../hooks/useUser';
 //import resources from "../../utils/resources";
-import { TweetContainer } from "../../utils/TweetContainer";
-//import { CommentContainer } from "../../utils/CommentContainer";
+import { MessageContainer } from "../../lib/MessageContainer";
+//import { CommentContainer } from "../../lib/CommentContainer";
 
 
 const Wrapper = styled.div`
@@ -44,7 +44,7 @@ const MasterTweet = () => {
       
       const data = await node.then(); 
 
-      const tweet = new TweetContainer(data, soul);
+      const tweet = new MessageContainer(data, soul);
       tweet.setOwner(userContainer);
       
       setTweet(tweet);

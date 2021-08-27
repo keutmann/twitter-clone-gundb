@@ -1,6 +1,6 @@
 //import { DateTree } from "gun-util";
 import { DispatcherEvent } from "./DispatcherEvent";
-import resources from "./resources";
+import resources from "../utils/resources";
 
 export class UserContainer {
 

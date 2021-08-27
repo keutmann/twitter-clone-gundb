@@ -1,11 +1,11 @@
 import { DispatcherEvent } from './DispatcherEvent';
-import resources from './resources';
+import resources from '../utils/resources';
 import { UserContainer } from './UserContainer';
 
-export class TweetContainer {
+export class MessageContainer {
 
     static sortCompare = (a, b) => a.sortCompare(b);
-    static sort = (obj) => Object.entries(obj).map(([key,val], i) => val).sort(TweetContainer.sortCompare);
+    static sort = (obj) => Object.entries(obj).map(([key,val], i) => val).sort(MessageContainer.sortCompare);
 
     constructor(data, soul) {
         this.soul = soul;
