@@ -55,9 +55,21 @@ export class UserContainer {
         this.onChange = new DispatcherEvent("onChange");
         this.onProfileChange = new DispatcherEvent("onProfileChange");
         this.degree = UserContainer.MAX_DEGREE; // The degree relative to the current user.
+
+        this.fromDate = null;
+        this.toDate = null;
+        this.oldestMessageDate = null;
     }
 
     static MAX_DEGREE = 99; // Make the degree high, so when a relationship is added it will get lower. 
+
+    pushToDate(k) {
+        let toDate = this.toDate?.toISOString();
+        if(!toDate || toDate > k) {
+            let time = new Date(k).getTime() - 1; // Remove one millisecond from the Date so do not get this message again.
+            this.toDate = new Date(time); // Set to lowest date possible.
+        }
+    }
 
     emptyScoreObj() {
         return {

@@ -2,26 +2,26 @@ import { DispatcherEvent } from './DispatcherEvent';
 import resources from '../utils/resources';
 import { UserContainer } from './UserContainer';
 
-export class MessageContainer {
+export default class MessageContainer {
 
     static sortCompare = (a, b) => a.sortCompare(b);
     static sort = (obj) => Object.entries(obj).map(([key,val], i) => val).sort(MessageContainer.sortCompare);
 
-    constructor(data, soul) {
-        this.soul = soul;
-        const soulElem = this.soul.split('/');
-        this.userId = soulElem.shift(); // Get user ID, should be the same as Owner
-        soulElem.shift(); // Just shift dpeep
-        this.category = soulElem.shift(); 
+    constructor(opt) {
+        //this.soul = soul;
+        //const soulElem = this.soul.split('/');
+        //this.userId = soulElem.shift(); // Get user ID, should be the same as Owner
+        //soulElem.shift(); // Just shift dpeep
+        //this.category = soulElem.shift(); 
 
         // Based on DateTime UTC format
         //this.id = `${soulElem[0]}-${soulElem[1]}-${soulElem[2]}T${soulElem[3]}:${soulElem[4]}:${soulElem[5]}.${soulElem[6]}Z`
         //this.id = `${soulElem[0]}`
-        this.id = soulElem.shift(); 
+        //this.id = soulElem.shift(); 
 
-        this.data = data;
-        this.loaded = !(!data);
         //this.confirmedBy = {};
+        this.init(opt);
+
         this.claimBy = [];
 
         this.scores = [];
@@ -29,6 +29,17 @@ export class MessageContainer {
         this.onScoreChange = new DispatcherEvent("onScoreChange");
         this.state = this.createScore();
         this.onStateChange = new DispatcherEvent("onStateChange");
+    }
+
+    init(opt) {
+        this.soul = opt.soul || this.soul;
+        this.key = opt.key || this.key;
+        this.date = opt.date || this.date;
+        this.hash = opt.hash || this.hash;
+        this.owner = opt.owner || opt.owner;
+        this.category = opt.category || this.category;
+        this.data = opt.data || opt.data;
+        this.loaded = !(!this.data);
     }
 
 

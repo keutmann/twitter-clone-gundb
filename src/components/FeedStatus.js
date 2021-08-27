@@ -28,11 +28,11 @@ const FeedStatus = () => {
     };
 
     feedManager.onFeedUdated.registerCallback(setCountCallback);
-    feedManager.onNewTweetAdded.registerCallback(setCountCallback);
+    feedManager.onNewMessageAdded.registerCallback(setCountCallback);
    
     return () => {
       feedManager.onFeedUdated.unregisterCallback(setCountCallback);
-      feedManager.onNewTweetAdded.unregisterCallback(setCountCallback);
+      feedManager.onNewMessageAdded.unregisterCallback(setCountCallback);
     };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -13,7 +13,7 @@ import Loader from "../Loader";
 import useUser  from '../../hooks/useUser';
 import resources from '../../utils/resources';
 import useProfile from "../../hooks/useProfile";
-
+import MessageManager from "../../lib/MessageManager";
 
 const Wrapper = styled.div`
   display: flex;
@@ -53,7 +53,12 @@ const Wrapper = styled.div`
   }
 `;
 
+
+
 const NewTweet = () => {
+
+  const messageManager = new MessageManager();
+
   const [tweetFiles, setTweetFiles] = useState([]);
   const tweet = useInput("");
 
@@ -61,24 +66,21 @@ const NewTweet = () => {
   const profile = useProfile(user);
 
   // Create a tweet on Gun
-  const createTweet = async (tweet) => {
+  const createMessage = async (message) => {
     // Timestamp the tweet automatically, this will enable time search on the users Tweets node.
-    const date = new Date();
-    //const tweetId = moment().toISOString();
-    const tweetId = date.toISOString();
 
-    tweet.createdAt = tweetId;
+    const messageId = messageManager.createId(message);
+    const messageNode = user.node.tweets.get(messageId); 
 
-    const tweetNode = user.node.tweets.get(tweetId); 
     //await tweetNode.put(tweet).then(); // Add Tweet to DateTree and wait for the Gun data object.
-    tweetNode.put(tweet); // Add Tweet to DateTree and wait for the Gun data object.
+    messageNode.put(message); // Add Tweet to DateTree and wait for the Gun data object.
 
     //user.node.tweetsMetadata.get(resources.node.names.latest).put(tweetData); // Add the tweet to the latest tweets for all the subscribtions.
 
     // Add comments object from the Gun root, as this is writeable for everone.
-    const comments = gun.get(resources.node.names.dpeep).get(resources.node.names.comments).get(user.id).get(tweetId);
+    const comments = gun.get(resources.node.names.dpeep).get(resources.node.names.comments).get(user.id).get(messageId);
     const commentsData = comments.put({}); 
-    tweetNode.get(resources.node.names.comments).put(commentsData);
+    messageNode.get(resources.node.names.comments).put(commentsData);
   }
 
   const handleNewTweet = async (e) => {
@@ -86,12 +88,13 @@ const NewTweet = () => {
 
     if (!tweet.value) return toast("Write something");
 
-    const tags = tweet.value.split(" ").filter((str) => str.startsWith("#")).join(', ');
+    //const tags = tweet.value.split(" ").filter((str) => str.startsWith("#")).join(', ');
 
     try {
-      let tweetdata = { "text" : tweet.value, "tags": tags };
+       
+      let tweetdata = messageManager.createMessage(tweet.value);
       
-      await createTweet(tweetdata);
+      await createMessage(tweetdata);
 
       //toast.success("Your tweet has been posted");
     } catch (err) {

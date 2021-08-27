@@ -8,7 +8,7 @@ import Comment from "../Comment/Comment";
 import AddComment from "../Comment/AddComment";
 import useUser  from '../../hooks/useUser';
 //import resources from "../../utils/resources";
-import { MessageContainer } from "../../lib/MessageContainer";
+import MessageContainer from "../../lib/MessageContainer";
 //import { CommentContainer } from "../../lib/CommentContainer";
 
 
