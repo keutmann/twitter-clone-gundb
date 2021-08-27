@@ -34,7 +34,10 @@ const ConfirmReject = ({ id, item }) => {
 
   function setClaim(action) {
     //setAction(action);
-    logginInUser.node.claims.get(item.soul).get("action").put(action);
+    const date = new Date();
+    const key = date.toISOString()+"#"+item.soul; // date for sorting purpose, enabling search on new entries
+
+    logginInUser.node.claims.get(key).get("action").put(action);
   }
 
 

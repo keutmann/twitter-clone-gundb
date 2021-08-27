@@ -42,7 +42,7 @@ const EditProfileForm = ({ history }) => {
           displayname: displayname.value+'',
           bio: bio.value+'',
           website: website.value+'',
-          avatar: avatarState ? avatarState : avatar.value,
+          avatar: avatarState ? avatarState : (avatar.value) ? avatar.value: '',
           //coverPhoto: coverPhotoState ? coverPhotoState : coverPhoto.value,
           coverPhoto: '',
           location: '',

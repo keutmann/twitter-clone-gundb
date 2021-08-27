@@ -6,14 +6,17 @@ const useProfile = (user) => {
 
     useEffect(() => {
 
-      if(!user.profile.loaded) {
-        user.loadProfile(setProfile);
-      } else {
-        setProfile(profile);
-      }
+      // Update if something has changed.
+      setProfile(user.loadProfile()); 
+      
+      user.onProfileChange.add(setProfile);
+
+      return () => {
+        user.onProfileChange.remove(setProfile);
+      };
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [setProfile]);
+    }, []);
 
     return profile;
   }

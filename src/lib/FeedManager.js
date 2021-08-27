@@ -232,8 +232,11 @@ export class FeedManager {
     }
 
     // hash of the claim is the id of the message.
-    addClaim(owner, gunClaim, soul, _msg, _ev) { 
+    addClaim(owner, gunClaim, key, _msg, _ev) { 
         owner.claimsEvent = _ev; // Reference to Event enabling unsubscribtion.
+
+        let [, soul] = key.splitKey("#"); // key = isodate#soul
+        if(!soul) return;
 
         let item = this.feedIndex.get(soul); 
         if(!item) {

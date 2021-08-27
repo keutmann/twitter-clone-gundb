@@ -53,12 +53,17 @@ export class UserContainer {
         this.state = this.createScore();
         this.onStateChange = new DispatcherEvent("onStateChange");
         this.onChange = new DispatcherEvent("onChange");
+        
         this.onProfileChange = new DispatcherEvent("onProfileChange");
+        this.profileEvent = undefined;
+
         this.degree = UserContainer.MAX_DEGREE; // The degree relative to the current user.
 
         this.fromDate = null;
         this.toDate = null;
         this.oldestMessageDate = null;
+
+        this.profile = undefined;
     }
 
     static MAX_DEGREE = 99; // Make the degree high, so when a relationship is added it will get lower. 
@@ -202,20 +207,23 @@ export class UserContainer {
         return { userid, handle, displayname, loaded: false };
       }
 
-    loadProfile(cb) {
+    
+    loadProfile() {
 
         if (!this.profile) {
             const preProfile = UserContainer.getDefaultProfile(this.id, null);
             this.profile = Object.assign({}, resources.node.profile, preProfile);
         }
 
-        if (cb && !this.profile.loaded) {
-            this.node.profile.once((val) => {
-                this.profile = Object.assign({}, this.profile, val); // Create a new object, that will trigger rerender on React
+        if(!this.profileEvent) {
+            this.node.profile.on((val, key, _msg, _ev) => {
+                this.profileEvent = _ev;
+                this.profile = Object.assign(this.profile, val); // Create a new object, that will trigger rerender on React
                 this.profile.loaded = true;
-                cb(this.profile);
+                this.onProfileChange.fire(this.profile);
             });
         }
+
         return this.profile;
 
     }
@@ -223,14 +231,6 @@ export class UserContainer {
     setAction(targetUser, action) {
         //this.node.relationships.get(targetUser.nodeId).get('action').put(action.name);
         this.node.relationships.get('~'+targetUser.id).put(action);
-    }
-
-    loadProfile2(cb) {
-
-        let profile = this._profile;
-
-        return profile;
-
     }
 
     isFollow() {

@@ -148,7 +148,7 @@ const UserProvider = (props) => {
 
         const loggedInUser = usersManager.getUserContainer(user); // Load currently loggin user
         // Load the profile on to dpeepUser
-        loggedInUser.loadProfile();
+        loggedInUser.loadProfile(); // Init a profile call
         setUser(loggedInUser);
 
         feedManager.loadUser(loggedInUser);

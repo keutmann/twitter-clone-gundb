@@ -1,21 +1,16 @@
 {
-  "short_name": "Twitter clone",
-  "name": "Twitter clone built with Reactjs, Prisma, Graphql",
+  "short_name": "Dpeep",
+  "name": "Dpeep Decentralized Twitter Clone",
   "icons": [
     {
-      "src": "logo.png",
-      "sizes": "64x64 32x32 24x24 16x16",
+      "src": "/img/Dpeep64.png",
+      "sizes": "48x64 24x32 18x24 12x16",
       "type": "image/x-icon"
     },
     {
-      "src": "logo192.png",
+      "src": "/img/DpeepA192.png",
       "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "logo512.png",
-      "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "143x192"
     }
   ],
   "start_url": ".",

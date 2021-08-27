@@ -4,6 +4,14 @@ export class DispatcherEvent {
         this.callbacks = [];
     }
 
+    add(cb) {
+        this.registerCallback(cb);
+    }
+
+    remove(cb) {
+        this.unregisterCallback(cb);
+    }
+
     registerCallback(callback) {
         this.callbacks.push(callback);
     }

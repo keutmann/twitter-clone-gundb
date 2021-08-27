@@ -24,7 +24,7 @@ const Wrapper = styled.div`
 `;
 
 const Profile = () => {
-  const { isLoggedIn, user, usersManager } = useUser();
+  const { isLoggedIn, user:loggedInUser, usersManager } = useUser();
   const { handle } = useParams(); 
   const [ viewedUser, setViewedUser] = useState(null);
   const [ profile, setProfile] = useState(null);
@@ -32,13 +32,23 @@ const Profile = () => {
 
   
   useEffect(() => {
-    const userContainer = usersManager.getUserContainerById(handle);
-    if(!userContainer) {
+    const user = usersManager.getUserContainerById(handle);
+
+    if(!user) {
       setUserNotFound(true);
       return;
     }
-    setViewedUser(userContainer);
-    setProfile(userContainer.loadProfile((profile) => setProfile(profile))); 
+
+    setViewedUser(user);
+
+    setProfile(user.loadProfile()); 
+
+    user.onProfileChange.add(setProfile);
+
+    return () => {
+      user.onProfileChange.remove(setProfile);
+    };
+    
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handle])
 
@@ -48,7 +58,7 @@ const Profile = () => {
   if(userNotFound)
     return <p>User not found</p>;
 
-  const isSelf = (isLoggedIn) ? handle === user.id : false;
+  const isSelf = (isLoggedIn) ? handle === loggedInUser.id : false;
 
   return (
     <Wrapper>
