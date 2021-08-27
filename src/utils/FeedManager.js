@@ -78,17 +78,24 @@ export class FeedManager {
         const end =  this.end || moment(start);
         end.add(-1, 'month'); // For now, use 1 month, as the amount of feed available in the system is limited.
         //, , '>': end.toISOString() 
-        let lex = {'.': { '>': end.toISOString() }, '%': 50000, '-': 1}; // The 50k limit has to be defined otherwise the lex do not work properly! The minus 1 makes the ordering correct.
+        let lex = {'.': { 
+                    '>': end.toISOString(),
+                    '<': '\uffff', // Use \uffff in lesser than (toDate)
+                    '-': true },
+                 '%': 50000}; // The 50k limit has to be defined otherwise the lex do not work properly! The minus 1 makes the ordering correct.
         return lex;
     }
 
     // When looking for old messages after the feed has been loaded.
     rollFeedLex() {
-
-        const start = this.end || moment();
-
-        //TODO: Do not work!
-        const lex = {'.': {'<': start.toISOString() }, '%': 50000, '-': 1}; // Just load 50k, and see where we end.
+        const start = (this.end || moment()).toISOString();
+        const end =  moment(this.end || moment());
+        end.add(-1, 'month'); // For now, use 1 month, as the amount of feed available in the system is limited.
+        const lex = {'.': {
+                        '<': start, 
+                        '>': end.toISOString(),    // Use '' empty in greater than (fromDate)
+                        '-': true },
+                     '%': 50000}; // Just load 50k, and see where we end.
         return lex;
     }
 
@@ -98,7 +105,11 @@ export class FeedManager {
     subscribeFeedLex() {
         const start = this.start || moment();
 
-        let lex = {'.': {'>': start.toISOString() }, '%': 50000, '-': 1}; // The 50k limit has to be defined otherwise the lex do not work properly! The minus 1 makes the ordering correct.
+        let lex = {'.': {
+                    '>': start.toISOString(),
+                    '<': '\uffff', // Use \uffff in lesser than (toDate)
+                     '-': true },
+                '%': 50000}; // The 50k limit has to be defined otherwise the lex do not work properly! The minus 1 makes the ordering correct.
         return lex;
     }
 
@@ -313,15 +324,17 @@ export class FeedManager {
 
         // let search = {'.': {'>': '2021-07-06T08:10:40.786Z'}, '%': 50000, '-': 1};
         // console.log(search);
-        const search2 = (this.initialLoading) ? this.initialFeedLex() : this.subscribeFeedLex();
+        const search = (this.initialLoading) ? this.initialFeedLex() : this.subscribeFeedLex();
 
         // targetUser.node.tweets.get(search2).map().once((data, key, _msg, _ev) => {
         //     console.log(data);
         // }); // Load the latest tweet from the user.
 
+        targetUser.followEvent?.off();
         //console.log(search2);
-        targetUser.node.tweets.get(search2).map().once((data, key, _msg, _ev) => {
+        targetUser.node.tweets.get(search).map().once((data, key, _msg, _ev) => {
             this.addFeed(data,key, _msg, _ev);
+            targetUser.followEvent = _ev;
         }); // Load the latest tweet from the user.
     }
 

@@ -4,11 +4,12 @@ import Loader from "./Loader";
 import Tweet from "./Tweet/Tweet";
 import CustomResponse from "./CustomResponse";
 import useUser from "../hooks/useUser";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 
-const Wrapper = styled.div`
-  margin-bottom: 7rem;
-`;
+// const Wrapper = styled.div`
+//   margin-bottom: 7rem;
+// `;
 
 const FeedList = () => {
 
@@ -65,7 +66,12 @@ const FeedList = () => {
   if(!feed) return <Loader />;
 
   return (
-    <Wrapper>
+
+    <InfiniteScroll
+  dataLength={feed.length} //This is important field to render the next data
+  next={feedManager.hasMore}
+  hasMore={true}>
+
       {feed.length ? (
           feed.map(item => 
             <Tweet key={item.soul} item={item} />
@@ -73,7 +79,8 @@ const FeedList = () => {
       ) : (
         <CustomResponse text="Follow some people to get some feed updates" />
       )}
-    </Wrapper>
+  </InfiniteScroll>
+
   );
 };
 
